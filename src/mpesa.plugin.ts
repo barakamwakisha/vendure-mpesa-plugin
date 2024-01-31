@@ -15,9 +15,9 @@ export interface MpesaPluginOptions {
     consumerSecret: string;
 
     /**
-     * Your paybill or till number
+     * Sandbox or live mode
      */
-    shortCode: string;
+    mode: 'sandbox' | 'live';
 }
 
 @VendurePlugin({
