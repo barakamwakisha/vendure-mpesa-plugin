@@ -14,6 +14,7 @@ import {
     mergeConfig
 } from "@vendure/core";
 import { initialData } from "./initial-data";
+import { MpesaPlugin } from '../src/mpesa.plugin';
 
 (async () => {
     registerInitializer("sqljs", new SqljsInitializer("__data__"));

@@ -1,14 +1,14 @@
 import axios, { AxiosInstance } from "axios";
 import { Inject, Injectable } from "@nestjs/common";
-import { Logger, PLUGIN_INIT_OPTIONS } from "@vendure/core";
+import { Logger, Order, PLUGIN_INIT_OPTIONS } from "@vendure/core";
 import { MpesaPluginOptions } from "../mpesa.plugin";
 import { LIVE_BASE_URL, SANDBOX_BASE_URL, loggerCtx } from "../constants";
 import { TokenResponse } from "../types";
 
 @Injectable()
 export class MpesaService {
-    private accessToken: string;
-    private accessTokenExpiryDate: Date;
+    private _accessToken: string;
+    private _accessTokenExpiryDate: Date;
 
     constructor(
         @Inject(PLUGIN_INIT_OPTIONS) private pluginOptions: MpesaPluginOptions
@@ -19,8 +19,8 @@ export class MpesaService {
     }
 
     private async getAccessToken(): Promise<string> {
-        if (this.accessToken && this.accessTokenExpiryDate && this.accessTokenExpiryDate > new Date()) {
-            return this.accessToken;
+        if (this._accessToken && this._accessTokenExpiryDate && this._accessTokenExpiryDate > new Date()) {
+            return this._accessToken;
         }
 
         const { consumerKey, consumerSecret } = this.pluginOptions;
@@ -30,15 +30,14 @@ export class MpesaService {
         try {
             const { data } = await axios.get<TokenResponse>(url, { headers: { Authorization: auth } });
 
-            this.accessToken = data.access_token;
-            this.accessTokenExpiryDate = new Date();
-            this.accessTokenExpiryDate.setSeconds(this.accessTokenExpiryDate.getSeconds() + parseInt(data.expires_in) - 60);
+            this._accessToken = data.access_token;
+            this._accessTokenExpiryDate = new Date();
+            this._accessTokenExpiryDate.setSeconds(this._accessTokenExpiryDate.getSeconds() + parseInt(data.expires_in) - 60);
 
             return data.access_token;
         } catch (err) {
-            const errorMessage = 'Could not authenticate to the Mpesa API. Please check your consumer key, secret and environment configuration.';
-            Logger.error(errorMessage, loggerCtx);
-            throw Error(errorMessage);
+            Logger.error('Could not authenticate to the Mpesa API. Please check your consumer key, secret and environment configuration.', loggerCtx);
+            return '';
         }
     }
 
@@ -50,5 +49,11 @@ export class MpesaService {
                 Authorization: `Bearer ${accessToken}`,
             },
         });
+    }
+
+    async initiateStkPush(amount: number, phoneNumber: string, orderCode: string) {
+        const client = this.getRequestClient();
+
+        const { shortCode, passkey } = this.pluginOptions;
     }
 }
