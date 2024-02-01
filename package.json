@@ -7,6 +7,9 @@
   "author": "barakamwakisha <barakamwakisha@gmail.com>",
   "license": "MIT",
   "private": false,
+  "scripts": {
+    "start": "rimraf __data__ && yarn ts-node test/dev-server.ts"
+  },
   "devDependencies": {
     "@vendure/admin-ui-plugin": "^2.1.6",
     "@vendure/asset-server-plugin": "^2.1.6",
@@ -14,6 +17,7 @@
     "@vendure/testing": "^2.1.6",
     "@vendure/ui-devkit": "^2.1.6",
     "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
