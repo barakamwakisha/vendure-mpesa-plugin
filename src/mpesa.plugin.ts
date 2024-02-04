@@ -1,5 +1,9 @@
 import { PluginCommonModule, VendurePlugin } from '@vendure/core';
-import { PLUGIN_INIT_OPTIONS } from './constants';
+import { MPESA_PLUGIN_INIT_OPTIONS } from './constants';
+import { CallbackWebhookController } from './api/callback-webhook.controller';
+import { MpesaService } from './service/mpesa.service';
+import { mpesaPaymentMethodHandler } from './config/mpesa.handler';
+import { mpesaEligibilityChecker } from './config/mpesa-eligibility-checker';
 
 /**
  * @description
@@ -53,11 +57,18 @@ export interface MpesaPluginOptions {
 
 @VendurePlugin({
     imports: [PluginCommonModule],
+    controllers: [CallbackWebhookController],
+    configuration: config => {
+        config.paymentOptions.paymentMethodHandlers.push(mpesaPaymentMethodHandler);
+        config.paymentOptions.paymentMethodEligibilityCheckers?.push(mpesaEligibilityChecker);
+        return config;
+    },
     providers: [
         {
-            provide: PLUGIN_INIT_OPTIONS,
+            provide: MPESA_PLUGIN_INIT_OPTIONS,
             useFactory: () => MpesaPlugin.options,
         },
+        MpesaService
     ],
 })
 export class MpesaPlugin {

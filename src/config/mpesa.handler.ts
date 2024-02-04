@@ -1,5 +1,6 @@
-import { CreatePaymentResult, Injector, LanguageCode, PaymentMethodHandler } from "@vendure/core";
+import { CreatePaymentResult, Injector, LanguageCode, PaymentMethodHandler, SettlePaymentErrorResult, SettlePaymentResult } from "@vendure/core";
 import { MpesaService } from "../service/mpesa.service";
+import { getPhoneNumberFromOrder } from "../util/phone-utils";
 
 let mpesaService: MpesaService;
 
@@ -14,25 +15,27 @@ export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
     createPayment: async (ctx, order, amount, args, metadata): Promise<CreatePaymentResult> => {
         try {
             const amountInShillings = amount / 100;
-            const phoneNumber = order.billingAddress.phoneNumber!;
-            await mpesaService.initiateStkPush(amountInShillings, phoneNumber, order.code);
+
+            // Phone number is guaranteed to be present in the eligibility checker
+            const phoneNumber = getPhoneNumberFromOrder(order)!;
+            const { CheckoutRequestID } = await mpesaService.initiateStkPush(amountInShillings, phoneNumber, order.code);
 
             return {
                 amount: order.total,
-                state: 'Authorized',
-                transactionId: '',
-                errorMessage: ''
+                state: 'Created',
+                transactionId: CheckoutRequestID,
             }
         } catch (err) {
             return {
                 amount: order.total,
                 state: 'Declined',
-                transactionId: '',
                 errorMessage: (err as Error).message
             }
         }
     },
     settlePayment: async (ctx, order, payment, args): Promise<SettlePaymentResult | SettlePaymentErrorResult> => {
-
+        return {
+            success: true,
+        }
     }
 })

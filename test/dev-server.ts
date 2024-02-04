@@ -34,6 +34,15 @@ import { MpesaPlugin } from '../src/mpesa.plugin';
                 port: 3050,
                 route: "admin",
             }),
+            MpesaPlugin.init({
+                consumerKey: "Ta1hqIkAmXonoestpC0j1SUayJVFsGzHhXqgL6sfCXfSP0IV",
+                consumerSecret: "jTxyei8gATx5FysQcDUYKVajLgryTGBzxwwxGGnM5ovg1qunAb1jlI59etVuKZgg",
+                environment: "sandbox",
+                shortCode: "174379",
+                passkey: "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919",
+                shortCodeType: "paybill",
+                vendureHost: "https://d9e6-197-232-92-152.ngrok-free.app"
+            })
         ],
         apiOptions: {
             shopApiPlayground: true,

@@ -1,16 +1,15 @@
 import { LanguageCode, PaymentMethodEligibilityChecker } from "@vendure/core";
-import { formatPhoneNumber, isSafaricomNumber } from "../util/phone-utils";
-import { formatNumber } from "libphonenumber-js";
+import { formatPhoneNumber, getPhoneNumberFromOrder, isSafaricomNumber } from "../util/phone-utils";
 
 export const mpesaEligibilityChecker = new PaymentMethodEligibilityChecker({
     code: 'mpesa-eligibility-checker',
     description: [{ languageCode: LanguageCode.en, value: 'Check whether Mpesa supports the payment' }],
     args: {},
-    check: (ctx, order, args) => {
+    check: async (ctx, order, args) => {
         const totalLessThanThreshold = order.totalWithTax < 50000000;
         if (!totalLessThanThreshold) return false;
 
-        const customerPhoneNumber = order.billingAddress.phoneNumber;
+        const customerPhoneNumber = getPhoneNumberFromOrder(order);
         if (!customerPhoneNumber) return false;
 
         const formattedNumber = formatPhoneNumber(customerPhoneNumber);
