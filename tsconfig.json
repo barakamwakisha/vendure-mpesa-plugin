@@ -10,7 +10,7 @@
     "strict": true,
     "sourceMap": false,
     "skipLibCheck": true,
-    "types": ["node"],
+    "types": ["vitest/globals", "node"],
     "declaration": true,
     "strictPropertyInitialization": false,
     "outDir": "dist"
