@@ -12,7 +12,7 @@ export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
         mpesaService = injector.get(MpesaService);
     },
 
-    createPayment: async (ctx, order, amount, args, metadata): Promise<CreatePaymentResult> => {
+    createPayment: async (_, order, amount): Promise<CreatePaymentResult> => {
         try {
             const amountInShillings = amount / 100;
 
@@ -33,9 +33,9 @@ export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
             }
         }
     },
-    settlePayment: async (ctx, order, payment, args): Promise<SettlePaymentResult | SettlePaymentErrorResult> => {
+    settlePayment: async (): Promise<SettlePaymentResult | SettlePaymentErrorResult> => {
         return {
             success: true,
         }
-    }
+    },
 })
