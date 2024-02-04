@@ -2,6 +2,6 @@
 
 # Vendure Mpesa Plugin
 
-🚀 **WORK IN PROGRESS**
-
 Accept Mpesa payments on your Vendure store.
+
+🚀 **WORK IN PROGRESS**
