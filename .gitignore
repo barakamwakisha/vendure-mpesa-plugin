@@ -7,7 +7,6 @@
 .cache
 .classpath
 .env
-.env.*
 .history
 .idea
 .project

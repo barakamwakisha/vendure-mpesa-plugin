@@ -15,6 +15,7 @@ import {
 } from "@vendure/core";
 import { initialData } from "./initial-data";
 import { MpesaPlugin } from '../src/mpesa.plugin';
+import { config } from './config';
 
 (async () => {
     registerInitializer("sqljs", new SqljsInitializer("__data__"));
@@ -35,13 +36,13 @@ import { MpesaPlugin } from '../src/mpesa.plugin';
                 route: "admin",
             }),
             MpesaPlugin.init({
-                consumerKey: "Ta1hqIkAmXonoestpC0j1SUayJVFsGzHhXqgL6sfCXfSP0IV",
-                consumerSecret: "jTxyei8gATx5FysQcDUYKVajLgryTGBzxwwxGGnM5ovg1qunAb1jlI59etVuKZgg",
-                environment: "sandbox",
-                shortCode: "174379",
-                passkey: "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919",
-                shortCodeType: "paybill",
-                vendureHost: "https://d9e6-197-232-92-152.ngrok-free.app"
+                consumerKey: config.CONSUMER_KEY,
+                consumerSecret: config.CONSUMER_SECRET,
+                environment: config.ENVIRONMENT,
+                shortCode: config.SHORTCODE,
+                passkey: config.PASSKEY,
+                shortCodeType: config.SHORTCODE_TYPE,
+                vendureHost: config.VENDURE_HOST
             })
         ],
         apiOptions: {
