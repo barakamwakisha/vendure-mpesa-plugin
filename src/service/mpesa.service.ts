@@ -3,6 +3,7 @@ import {
     Logger,
     OrderService,
     Payment,
+    PaymentService,
     RequestContext,
     TransactionalConnection
 } from "@vendure/core"
@@ -29,7 +30,8 @@ export class MpesaService {
         private pluginOptions: MpesaPluginOptions,
         private connection: TransactionalConnection,
         private paymentStateMachine: PaymentStateMachine,
-        private orderService: OrderService
+        private orderService: OrderService,
+        private paymentService: PaymentService
     ) {}
 
     async initiateStkPush(
@@ -70,7 +72,7 @@ export class MpesaService {
         }
     }
 
-    async updateTransactionStatus(ctx: RequestContext, transactionId: string) {
+    async checkTransactionStatus(transactionId: string) {
         const client = await this.getRequestClient()
 
         const { shortCode } = this.pluginOptions
@@ -88,52 +90,41 @@ export class MpesaService {
                 }
             )
 
-            const payment = await this.getPaymentByTransactionId(
-                ctx,
-                transactionId
-            )
+            const success = data.ResultCode === "0" && data.ResponseCode === "0"
 
-            if (payment) {
-                const order = payment.order
-
-                if (data.ResponseCode === "0" && data.ResultCode === "0") {
-                    Logger.info(
-                        `Transaction ${transactionId} was successful`,
-                        loggerCtx
-                    )
-                    await this.paymentStateMachine.transition(
-                        ctx,
-                        order,
-                        payment,
-                        "Settled"
-                    )
-
-                    if (order.state === "PaymentAuthorized") {
-                        await this.orderService.transitionToState(
-                            ctx,
-                            order.id,
-                            "PaymentSettled"
-                        )
-                    }
-                } else {
-                    Logger.error(
-                        `Transaction ${transactionId} failed with error ${data.ResultDesc}`,
-                        loggerCtx
-                    )
-                    await this.paymentStateMachine.transition(
-                        ctx,
-                        order,
-                        payment,
-                        "Declined"
-                    )
-                }
+            return {
+                success
             }
         } catch (err) {
             Logger.error(
                 `Couldn't query transaction ${transactionId} status`,
                 loggerCtx
             )
+            return {
+                success: false
+            }
         }
+    }
+
+    async settlePayment(ctx: RequestContext, transactionId: string) {
+        const transactionStatus =
+            await this.checkTransactionStatus(transactionId)
+
+        if (!transactionStatus.success) {
+            Logger.info(
+                `Transaction ${transactionId} was not successful`,
+                loggerCtx
+            )
+            return transactionStatus
+        }
+
+        const payment = await this.getPaymentByTransactionId(ctx, transactionId)
+
+        if (payment) {
+            await this.orderService.settlePayment(ctx, payment.id)
+        }
+
+        return transactionStatus
     }
 
     private getBaseUrl(): string {
