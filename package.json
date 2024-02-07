@@ -22,9 +22,11 @@
         "prepare": "husky install",
         "start": "rimraf __data__ && yarn ts-node e2e/dev-server.ts",
         "build": "rimraf dist && tsc && copyfiles -u 1 'src/ui/**/*' dist",
-        "test": "vitest run"
+        "test": "vitest run",
+        "release": "yarn build && changeset publish"
     },
     "devDependencies": {
+        "@changesets/cli": "^2.27.1",
         "@typescript-eslint/eslint-plugin": "^6.21.0",
         "@typescript-eslint/parser": "^6.21.0",
         "@vendure/admin-ui-plugin": "^2.1.6",
