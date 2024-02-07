@@ -41,6 +41,8 @@ export const config: VendureConfig = {
 
 > Note: Select the 'Check whether Mpesa supports the payment' eligibility checker when creating the payment method.
 
+3. Calling the `addPaymentToOrder` mutation on the storefront with the corresponing payment method code will initiate an STK push to the customer's phone.
+
 ## Reference
 
 -   [Mpesa Daraja API Docs](https://developer.safaricom.co.ke/Documentation)
