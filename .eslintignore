@@ -8,6 +8,7 @@ __admin-ui/
 __data__
 node_modules
 __admin-ui
+assets
 
 dist
 *.min.js
