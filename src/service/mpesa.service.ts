@@ -3,11 +3,9 @@ import {
     Logger,
     OrderService,
     Payment,
-    PaymentService,
     RequestContext,
     TransactionalConnection
 } from "@vendure/core"
-import { PaymentStateMachine } from "@vendure/core/dist/service/helpers/payment-state-machine/payment-state-machine"
 import axios, { AxiosInstance } from "axios"
 
 import {
@@ -29,7 +27,6 @@ export class MpesaService {
         @Inject(MPESA_PLUGIN_INIT_OPTIONS)
         private pluginOptions: MpesaPluginOptions,
         private connection: TransactionalConnection,
-        private paymentStateMachine: PaymentStateMachine,
         private orderService: OrderService
     ) {}
 

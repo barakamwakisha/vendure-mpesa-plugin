@@ -2,9 +2,7 @@ import {
     CreatePaymentResult,
     Injector,
     LanguageCode,
-    PaymentMethodHandler,
-    SettlePaymentErrorResult,
-    SettlePaymentResult
+    PaymentMethodHandler
 } from "@vendure/core"
 
 import { MpesaService } from "../service/mpesa.service"
@@ -35,14 +33,14 @@ export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
 
         if (!result) {
             return {
-                amount: order.total,
+                amount: order.totalWithTax,
                 state: "Declined",
                 errorMessage: "Could not initiate Mpesa payment."
             }
         }
 
         return {
-            amount: order.total,
+            amount: order.totalWithTax,
             state: "Authorized",
             transactionId: result.CheckoutRequestID
         }
