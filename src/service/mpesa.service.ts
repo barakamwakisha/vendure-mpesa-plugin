@@ -30,8 +30,7 @@ export class MpesaService {
         private pluginOptions: MpesaPluginOptions,
         private connection: TransactionalConnection,
         private paymentStateMachine: PaymentStateMachine,
-        private orderService: OrderService,
-        private paymentService: PaymentService
+        private orderService: OrderService
     ) {}
 
     async initiateStkPush(
@@ -90,41 +89,42 @@ export class MpesaService {
                 }
             )
 
-            const success = data.ResultCode === "0" && data.ResponseCode === "0"
+            const isSuccessful =
+                data.ResultCode === "0" && data.ResponseCode === "0"
 
-            return {
-                success
-            }
+            return isSuccessful
         } catch (err) {
             Logger.error(
                 `Couldn't query transaction ${transactionId} status`,
                 loggerCtx
             )
-            return {
-                success: false
-            }
+            return false
         }
     }
 
     async settlePayment(ctx: RequestContext, transactionId: string) {
-        const transactionStatus =
+        const isTransactionSuccessful =
             await this.checkTransactionStatus(transactionId)
 
-        if (!transactionStatus.success) {
+        if (isTransactionSuccessful) {
+            Logger.info(
+                `Transaction ${transactionId} was successful`,
+                loggerCtx
+            )
+            const payment = await this.getPaymentByTransactionId(
+                ctx,
+                transactionId
+            )
+
+            if (payment) {
+                await this.orderService.settlePayment(ctx, payment.id)
+            }
+        } else {
             Logger.info(
                 `Transaction ${transactionId} was not successful`,
                 loggerCtx
             )
-            return transactionStatus
         }
-
-        const payment = await this.getPaymentByTransactionId(ctx, transactionId)
-
-        if (payment) {
-            await this.orderService.settlePayment(ctx, payment.id)
-        }
-
-        return transactionStatus
     }
 
     private getBaseUrl(): string {

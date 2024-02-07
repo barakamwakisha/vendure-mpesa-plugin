@@ -26,7 +26,7 @@ export class CallbackWebhookController {
         )
 
         const ctx = await this.createRequestContext()
-        this.mpesaService.settlePayment(ctx, CheckoutRequestID)
+        await this.mpesaService.settlePayment(ctx, CheckoutRequestID)
     }
 
     private async createRequestContext(): Promise<RequestContext> {

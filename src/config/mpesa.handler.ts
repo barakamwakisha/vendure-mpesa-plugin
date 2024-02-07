@@ -47,11 +47,9 @@ export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
             transactionId: result.CheckoutRequestID
         }
     },
-    settlePayment: async (ctx, order, payment) => {
-        const result = await mpesaService.settlePayment(
-            ctx,
-            payment.transactionId
-        )
-        return result
+    settlePayment: async () => {
+        return {
+            success: true
+        }
     }
 })
