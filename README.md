@@ -43,6 +43,8 @@ export const config: VendureConfig = {
 
 3. Calling the `addPaymentToOrder` mutation on the storefront with the corresponing payment method code will initiate an STK push to the customer's phone.
 
+4. Call the `verifyMpesaTransaction` mutation periodically on the storefront to verify the transaction status.
+
 ## Reference
 
 -   [Mpesa Daraja API Docs](https://developer.safaricom.co.ke/Documentation)

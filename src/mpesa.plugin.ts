@@ -1,6 +1,8 @@
 import { PluginCommonModule, VendurePlugin } from "@vendure/core"
 
+import { shopApiExtensions } from "./api/api-extensions"
 import { CallbackWebhookController } from "./api/callback-webhook.controller"
+import { MpesaShopResolver } from "./api/mpesa-shop.resolver"
 import { mpesaEligibilityChecker } from "./config/mpesa-eligibility-checker"
 import { mpesaPaymentMethodHandler } from "./config/mpesa.handler"
 import { MPESA_PLUGIN_INIT_OPTIONS } from "./constants"
@@ -67,6 +69,10 @@ export interface MpesaPluginOptions {
             mpesaEligibilityChecker
         )
         return config
+    },
+    shopApiExtensions: {
+        schema: shopApiExtensions,
+        resolvers: [MpesaShopResolver]
     },
     providers: [
         {
