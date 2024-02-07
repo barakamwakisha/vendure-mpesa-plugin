@@ -43,7 +43,7 @@ export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
 
         return {
             amount: order.total,
-            state: "Created",
+            state: "Authorized",
             transactionId: result.CheckoutRequestID
         }
     },

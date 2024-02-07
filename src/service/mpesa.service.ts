@@ -108,7 +108,7 @@ export class MpesaService {
                         "Settled"
                     )
 
-                    if (order.state === "ArrangingPayment") {
+                    if (order.state === "PaymentAuthorized") {
                         await this.orderService.transitionToState(
                             ctx,
                             order.id,
