@@ -23,7 +23,7 @@ export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
     },
 
     createPayment: async (_, order, amount): Promise<CreatePaymentResult> => {
-        const amountInShillings = amount / 100
+        const amountInShillings = Math.ceil(amount / 100)
 
         // Phone number is guaranteed to be present in the eligibility checker
         const phoneNumber = getPhoneNumberFromOrder(order)!

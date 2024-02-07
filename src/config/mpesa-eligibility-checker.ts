@@ -17,7 +17,7 @@ export const mpesaEligibilityChecker = new PaymentMethodEligibilityChecker({
     ],
     args: {},
     check: async (_, order) => {
-        const totalLessThanThreshold = order.totalWithTax < 50000000
+        const totalLessThanThreshold = Math.ceil(order.totalWithTax) < 50000000
         if (!totalLessThanThreshold) {
             Logger.info("Order total is greater than KES 500,000", loggerCtx)
             return false
