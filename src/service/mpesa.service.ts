@@ -99,6 +99,16 @@ export class MpesaService {
         }
     }
 
+    async verifyMpesaPayment(ctx: RequestContext, transactionId: string) {
+        const payment = await this.getPaymentByTransactionId(ctx, transactionId)
+
+        if (!payment) {
+            return false
+        }
+
+        return payment.state === "Settled"
+    }
+
     async settlePayment(ctx: RequestContext, transactionId: string) {
         const isTransactionSuccessful =
             await this.checkTransactionStatus(transactionId)
