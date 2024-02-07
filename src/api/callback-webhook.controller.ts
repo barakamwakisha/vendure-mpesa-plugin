@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from "@nestjs/common"
+import { Body, Controller, Post } from "@nestjs/common"
 import {
     ChannelService,
     LanguageCode,
@@ -16,18 +16,6 @@ export class CallbackWebhookController {
         private channelService: ChannelService,
         private mpesaService: MpesaService
     ) {}
-
-    @Get()
-    async testSTKPush() {
-        const phoneNumber = "254716570766"
-        const amount = 10
-        const result = await this.mpesaService.initiateStkPush(
-            amount,
-            phoneNumber,
-            "vendure-plugin-test"
-        )
-        return result
-    }
 
     @Post()
     async handleCallback(@Body() payload: STKCallbackPayload) {
