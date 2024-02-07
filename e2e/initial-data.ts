@@ -6,9 +6,7 @@ export const initialData: InitialData = {
     defaultZone: "Africa",
     taxRates: [{ name: "VAT", percentage: 16 }],
     shippingMethods: [],
-    countries: [
-        { name: "Kenya", code: "KE", zone: "Africa" }
-    ],
+    countries: [{ name: "Kenya", code: "KE", zone: "Africa" }],
     collections: [
         {
             name: "Computers",

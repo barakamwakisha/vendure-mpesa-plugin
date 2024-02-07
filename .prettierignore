@@ -1,0 +1,26 @@
+## Please check .eslintignore and .gitignore when changing this file
+
+## File extensions
+*.*
+!*.css
+!*.js
+!*.json
+!*.jsx
+!*.less
+!*.md
+!*.mdx
+!*.ts
+!*.tsx
+!*.yml
+
+## Copied from .gitignore
+__admin-ui/
+__data__
+node_modules
+__admin-ui
+
+## Shared between eslint and prettier
+dist
+*.min.js
+.temp
+generated

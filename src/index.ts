@@ -1,1 +1,1 @@
-export * from './mpesa.plugin';
+export * from "./mpesa.plugin"
