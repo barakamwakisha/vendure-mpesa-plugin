@@ -1,24 +1,25 @@
-import path from "path";
-import {
-    SqljsInitializer,
-    createTestEnvironment,
-    registerInitializer,
-    testConfig
-} from "@vendure/testing";
-import { AdminUiPlugin } from "@vendure/admin-ui-plugin";
-import { AssetServerPlugin } from "@vendure/asset-server-plugin";
+import path from "path"
+
+import { AdminUiPlugin } from "@vendure/admin-ui-plugin"
+import { AssetServerPlugin } from "@vendure/asset-server-plugin"
 import {
     DefaultLogger,
     DefaultSearchPlugin,
     LogLevel,
     mergeConfig
-} from "@vendure/core";
-import { initialData } from "./initial-data";
-import { MpesaPlugin } from '../src/mpesa.plugin';
-import { config } from './config';
+} from "@vendure/core"
+import {
+    SqljsInitializer,
+    createTestEnvironment,
+    registerInitializer,
+    testConfig
+} from "@vendure/testing"
 
-(async () => {
-    registerInitializer("sqljs", new SqljsInitializer("__data__"));
+import { config } from "./config"
+import { initialData } from "./initial-data"
+import { MpesaPlugin } from "../src/mpesa.plugin"
+;(async () => {
+    registerInitializer("sqljs", new SqljsInitializer("__data__"))
 
     const devConfig = mergeConfig(testConfig, {
         dbConnectionOptions: {
@@ -33,7 +34,7 @@ import { config } from './config';
             DefaultSearchPlugin,
             AdminUiPlugin.init({
                 port: 3050,
-                route: "admin",
+                route: "admin"
             }),
             MpesaPlugin.init({
                 consumerKey: config.CONSUMER_KEY,
@@ -55,14 +56,8 @@ import { config } from './config';
     await server.init({
         initialData: {
             ...initialData,
-            shippingMethods: [
-                { name: "Standard Shipping", price: 500 },
-            ]
+            shippingMethods: [{ name: "Standard Shipping", price: 500 }]
         },
-        productsCsvPath: path.join(
-            __dirname,
-            "product-import.csv"
-        )
+        productsCsvPath: path.join(__dirname, "product-import.csv")
     })
-
 })()
