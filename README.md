@@ -2,6 +2,9 @@
 
 # Vendure Mpesa Plugin
 
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/barakamwakisha/vendure-mpesa-plugin/test.yml)
+&nbsp; ![NPM Version](https://img.shields.io/npm/v/vendure-mpesa-plugin)
+
 Accept Mpesa payments on your Vendure store.
 
 ## Installation
