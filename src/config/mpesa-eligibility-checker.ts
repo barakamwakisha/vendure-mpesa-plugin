@@ -1,10 +1,11 @@
-import { LanguageCode, PaymentMethodEligibilityChecker } from "@vendure/core"
-
 import {
-    formatPhoneNumber,
-    getPhoneNumberFromOrder,
-    isSafaricomNumber
-} from "../util/phone-utils"
+    LanguageCode,
+    Logger,
+    PaymentMethodEligibilityChecker
+} from "@vendure/core"
+
+import { loggerCtx } from "../constants"
+import { getPhoneNumberFromOrder, isSafaricomNumber } from "../util/phone-utils"
 
 export const mpesaEligibilityChecker = new PaymentMethodEligibilityChecker({
     code: "mpesa-eligibility-checker",
@@ -17,16 +18,28 @@ export const mpesaEligibilityChecker = new PaymentMethodEligibilityChecker({
     args: {},
     check: async (_, order) => {
         const totalLessThanThreshold = order.totalWithTax < 50000000
-        if (!totalLessThanThreshold) return false
+        if (!totalLessThanThreshold) {
+            Logger.info("Order total is greater than KES 500,000", loggerCtx)
+            return false
+        }
 
         const customerPhoneNumber = getPhoneNumberFromOrder(order)
-        if (!customerPhoneNumber) return false
+        if (!customerPhoneNumber) {
+            Logger.info(
+                "Could not get valid phone number from order",
+                loggerCtx
+            )
+            return false
+        }
 
-        const formattedNumber = formatPhoneNumber(customerPhoneNumber)
-        if (!formattedNumber) return false
-
-        const isMpesaNumber = isSafaricomNumber(formattedNumber)
-        if (!isMpesaNumber) return false
+        const isMpesaNumber = isSafaricomNumber(customerPhoneNumber)
+        if (!isMpesaNumber) {
+            Logger.info(
+                `Phone number ${customerPhoneNumber} is not a Safaricom number`,
+                loggerCtx
+            )
+            return false
+        }
 
         return true
     }

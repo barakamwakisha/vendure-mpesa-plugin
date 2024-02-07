@@ -23,28 +23,28 @@ export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
     },
 
     createPayment: async (_, order, amount): Promise<CreatePaymentResult> => {
-        try {
-            const amountInShillings = amount / 100
+        const amountInShillings = amount / 100
 
-            // Phone number is guaranteed to be present in the eligibility checker
-            const phoneNumber = getPhoneNumberFromOrder(order)!
-            const { CheckoutRequestID } = await mpesaService.initiateStkPush(
-                amountInShillings,
-                phoneNumber,
-                order.code
-            )
+        // Phone number is guaranteed to be present in the eligibility checker
+        const phoneNumber = getPhoneNumberFromOrder(order)!
+        const result = await mpesaService.initiateStkPush(
+            amountInShillings,
+            phoneNumber,
+            order.code
+        )
 
-            return {
-                amount: order.total,
-                state: "Created",
-                transactionId: CheckoutRequestID
-            }
-        } catch (err) {
+        if (!result) {
             return {
                 amount: order.total,
                 state: "Declined",
-                errorMessage: (err as Error).message
+                errorMessage: "Could not initiate Mpesa payment."
             }
+        }
+
+        return {
+            amount: order.total,
+            state: "Created",
+            transactionId: result.CheckoutRequestID
         }
     },
     settlePayment: async (): Promise<

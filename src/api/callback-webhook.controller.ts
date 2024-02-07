@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from "@nestjs/common"
+import { Body, Controller, Get, Post } from "@nestjs/common"
 import {
     ChannelService,
     LanguageCode,
@@ -6,7 +6,7 @@ import {
     RequestContext
 } from "@vendure/core"
 
-import { CALLBACK_URL_ENDPOINT } from "../constants"
+import { CALLBACK_URL_ENDPOINT, loggerCtx } from "../constants"
 import { MpesaService } from "../service/mpesa.service"
 import { STKCallbackPayload } from "../types"
 
@@ -17,11 +17,24 @@ export class CallbackWebhookController {
         private mpesaService: MpesaService
     ) {}
 
+    @Get()
+    async testSTKPush() {
+        const phoneNumber = "254716570766"
+        const amount = 10
+        const result = await this.mpesaService.initiateStkPush(
+            amount,
+            phoneNumber,
+            "vendure-plugin-test"
+        )
+        return result
+    }
+
     @Post()
     async handleCallback(@Body() payload: STKCallbackPayload) {
         const { CheckoutRequestID, ResultCode } = payload.Body.stkCallback
         Logger.info(
-            `Received Mpesa callback for transaction ${CheckoutRequestID} with status ${ResultCode}`
+            `Mpesa Callback ${CheckoutRequestID}, status: ${ResultCode}`,
+            loggerCtx
         )
 
         const ctx = await this.createRequestContext()

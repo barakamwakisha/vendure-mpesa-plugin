@@ -46,24 +46,28 @@ export class MpesaService {
                 : "CustomerBuyGoodsOnline"
         const timestamp = this.getCurrentTimestamp()
 
-        const { data } = await client.post<STKPushResponse>(
-            "/stkpush/v1/processrequest",
-            {
-                BusinessShortCode: this.pluginOptions.shortCode,
-                Password: this.getTransactionPassword(timestamp),
-                Timestamp: timestamp,
-                TransactionType: transactionType,
-                Amount: amount,
-                PartyA: phoneNumber,
-                PartyB: this.pluginOptions.shortCode,
-                PhoneNumber: phoneNumber,
-                CallBackURL: this.getCallBackUrl(),
-                AccountReference: orderCode,
-                TransactionDesc: "Vendure Order Payment"
-            }
-        )
+        try {
+            const { data } = await client.post<STKPushResponse>(
+                "/stkpush/v1/processrequest",
+                {
+                    BusinessShortCode: this.pluginOptions.shortCode,
+                    Password: this.getTransactionPassword(timestamp),
+                    Timestamp: timestamp,
+                    TransactionType: transactionType,
+                    Amount: amount,
+                    PartyA: phoneNumber,
+                    PartyB: this.pluginOptions.shortCode,
+                    PhoneNumber: phoneNumber,
+                    CallBackURL: this.getCallBackUrl(),
+                    AccountReference: orderCode,
+                    TransactionDesc: "Vendure Order Payment"
+                }
+            )
 
-        return data
+            return data
+        } catch (err) {
+            Logger.error("Could not initiate STK push", loggerCtx)
+        }
     }
 
     async updateTransactionStatus(ctx: RequestContext, transactionId: string) {
@@ -88,38 +92,41 @@ export class MpesaService {
                 ctx,
                 transactionId
             )
-            const order = payment.order
 
-            if (data.ResponseCode === "0" && data.ResultCode === "0") {
-                Logger.info(
-                    `Transaction ${transactionId} was successful`,
-                    loggerCtx
-                )
-                await this.paymentStateMachine.transition(
-                    ctx,
-                    order,
-                    payment,
-                    "Settled"
-                )
+            if (payment) {
+                const order = payment.order
 
-                if (order.state === "ArrangingPayment") {
-                    await this.orderService.transitionToState(
+                if (data.ResponseCode === "0" && data.ResultCode === "0") {
+                    Logger.info(
+                        `Transaction ${transactionId} was successful`,
+                        loggerCtx
+                    )
+                    await this.paymentStateMachine.transition(
                         ctx,
-                        order.id,
-                        "PaymentSettled"
+                        order,
+                        payment,
+                        "Settled"
+                    )
+
+                    if (order.state === "ArrangingPayment") {
+                        await this.orderService.transitionToState(
+                            ctx,
+                            order.id,
+                            "PaymentSettled"
+                        )
+                    }
+                } else {
+                    Logger.error(
+                        `Transaction ${transactionId} failed with error ${data.ResultDesc}`,
+                        loggerCtx
+                    )
+                    await this.paymentStateMachine.transition(
+                        ctx,
+                        order,
+                        payment,
+                        "Declined"
                     )
                 }
-            } else {
-                Logger.error(
-                    `Transaction ${transactionId} failed with error ${data.ResultDesc}`,
-                    loggerCtx
-                )
-                await this.paymentStateMachine.transition(
-                    ctx,
-                    order,
-                    payment,
-                    "Declined"
-                )
             }
         } catch (err) {
             Logger.error(
@@ -207,7 +214,7 @@ export class MpesaService {
     private async getPaymentByTransactionId(
         ctx: RequestContext,
         transactionId: string
-    ): Promise<Payment> {
+    ): Promise<Payment | undefined> {
         const payment = await this.connection
             .getRepository(ctx, Payment)
             .findOne({
@@ -217,11 +224,10 @@ export class MpesaService {
 
         if (!payment) {
             Logger.error(
-                `There isn't a payment related with the transaction ID ${transactionId}`
+                `There isn't a payment related with the transaction ID ${transactionId}`,
+                loggerCtx
             )
-            throw new Error(
-                `There isn't a payment related with the transaction ID ${transactionId}`
-            )
+            return
         }
 
         return payment
