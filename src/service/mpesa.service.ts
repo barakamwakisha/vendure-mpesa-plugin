@@ -103,14 +103,12 @@ export class MpesaService {
         const isTransactionSuccessful =
             await this.checkTransactionStatus(transactionId)
 
+        const payment = await this.getPaymentByTransactionId(ctx, transactionId)
+
         if (isTransactionSuccessful) {
             Logger.info(
                 `Transaction ${transactionId} was successful`,
                 loggerCtx
-            )
-            const payment = await this.getPaymentByTransactionId(
-                ctx,
-                transactionId
             )
 
             if (payment) {
@@ -121,6 +119,9 @@ export class MpesaService {
                 `Transaction ${transactionId} was not successful`,
                 loggerCtx
             )
+            if (payment) {
+                await this.orderService.cancelPayment(ctx, payment.id)
+            }
         }
     }
 
