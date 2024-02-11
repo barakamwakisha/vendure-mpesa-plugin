@@ -63,24 +63,24 @@ export interface MpesaPluginOptions {
     controllers: [CallbackWebhookController],
     configuration: config => {
         config.paymentOptions.paymentMethodHandlers.push(
-            mpesaPaymentMethodHandler
+            mpesaPaymentMethodHandler,
         )
         config.paymentOptions.paymentMethodEligibilityCheckers?.push(
-            mpesaEligibilityChecker
+            mpesaEligibilityChecker,
         )
         return config
     },
     shopApiExtensions: {
         schema: shopApiExtensions,
-        resolvers: [MpesaShopResolver]
+        resolvers: [MpesaShopResolver],
     },
     providers: [
         {
             provide: MPESA_PLUGIN_INIT_OPTIONS,
-            useFactory: () => MpesaPlugin.options
+            useFactory: () => MpesaPlugin.options,
         },
-        MpesaService
-    ]
+        MpesaService,
+    ],
 })
 export class MpesaPlugin {
     static options: MpesaPluginOptions

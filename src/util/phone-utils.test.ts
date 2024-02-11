@@ -3,7 +3,7 @@ import { Order } from "@vendure/core"
 import {
     formatPhoneNumber,
     getPhoneNumberFromOrder,
-    isSafaricomNumber
+    isSafaricomNumber,
 } from "./phone-utils"
 
 describe("phone-utils", () => {
@@ -23,14 +23,14 @@ describe("phone-utils", () => {
     it("gets phone number from order in correct order", () => {
         const order = {
             customer: {
-                phoneNumber: "0714345678"
+                phoneNumber: "0714345678",
             },
             billingAddress: {
-                phoneNumber: "0712345678"
+                phoneNumber: "0712345678",
             },
             shippingAddress: {
-                phoneNumber: "0713345678"
-            }
+                phoneNumber: "0713345678",
+            },
         } as Order
         expect(getPhoneNumberFromOrder(order)).toBe("254712345678")
     })

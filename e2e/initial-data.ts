@@ -13,10 +13,13 @@ export const initialData: InitialData = {
             filters: [
                 {
                     code: "facet-value-filter",
-                    args: { facetValueNames: ["computers"], containsAny: false }
-                }
-            ]
-        }
+                    args: {
+                        facetValueNames: ["computers"],
+                        containsAny: false,
+                    },
+                },
+            ],
+        },
     ],
-    paymentMethods: []
+    paymentMethods: [],
 }

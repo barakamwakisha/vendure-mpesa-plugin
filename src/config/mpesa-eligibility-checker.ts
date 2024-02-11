@@ -1,7 +1,7 @@
 import {
     LanguageCode,
     Logger,
-    PaymentMethodEligibilityChecker
+    PaymentMethodEligibilityChecker,
 } from "@vendure/core"
 
 import { loggerCtx } from "../constants"
@@ -12,8 +12,8 @@ export const mpesaEligibilityChecker = new PaymentMethodEligibilityChecker({
     description: [
         {
             languageCode: LanguageCode.en,
-            value: "Check whether Mpesa supports the payment"
-        }
+            value: "Check whether Mpesa supports the payment",
+        },
     ],
     args: {},
     check: async (_, order) => {
@@ -27,7 +27,7 @@ export const mpesaEligibilityChecker = new PaymentMethodEligibilityChecker({
         if (!customerPhoneNumber) {
             Logger.info(
                 "Could not get valid phone number from order",
-                loggerCtx
+                loggerCtx,
             )
             return false
         }
@@ -36,11 +36,11 @@ export const mpesaEligibilityChecker = new PaymentMethodEligibilityChecker({
         if (!isMpesaNumber) {
             Logger.info(
                 `Phone number ${customerPhoneNumber} is not a Safaricom number`,
-                loggerCtx
+                loggerCtx,
             )
             return false
         }
 
         return true
-    }
+    },
 })

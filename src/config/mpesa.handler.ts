@@ -2,7 +2,7 @@ import {
     CreatePaymentResult,
     Injector,
     LanguageCode,
-    PaymentMethodHandler
+    PaymentMethodHandler,
 } from "@vendure/core"
 
 import { MpesaService } from "../service/mpesa.service"
@@ -13,7 +13,7 @@ let mpesaService: MpesaService
 export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
     code: "mpesa",
     description: [
-        { languageCode: LanguageCode.en, value: "Lipa na Mpesa Online" }
+        { languageCode: LanguageCode.en, value: "Lipa na Mpesa Online" },
     ],
     args: {},
     init(injector: Injector) {
@@ -28,26 +28,26 @@ export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
         const result = await mpesaService.initiateStkPush(
             amountInShillings,
             phoneNumber,
-            order.code
+            order.code,
         )
 
         if (!result) {
             return {
                 amount: order.totalWithTax,
                 state: "Declined",
-                errorMessage: "Could not initiate Mpesa payment."
+                errorMessage: "Could not initiate Mpesa payment.",
             }
         }
 
         return {
             amount: order.totalWithTax,
             state: "Authorized",
-            transactionId: result.CheckoutRequestID
+            transactionId: result.CheckoutRequestID,
         }
     },
     settlePayment: async () => {
         return {
-            success: true
+            success: true,
         }
-    }
+    },
 })

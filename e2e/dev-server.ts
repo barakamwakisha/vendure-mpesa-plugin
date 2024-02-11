@@ -6,13 +6,13 @@ import {
     DefaultLogger,
     DefaultSearchPlugin,
     LogLevel,
-    mergeConfig
+    mergeConfig,
 } from "@vendure/core"
 import {
     SqljsInitializer,
     createTestEnvironment,
     registerInitializer,
-    testConfig
+    testConfig,
 } from "@vendure/testing"
 
 import { config } from "./config"
@@ -23,18 +23,18 @@ import { MpesaPlugin } from "../src/mpesa.plugin"
 
     const devConfig = mergeConfig(testConfig, {
         dbConnectionOptions: {
-            synchronize: true
+            synchronize: true,
         },
         logger: new DefaultLogger({ level: LogLevel.Debug }),
         plugins: [
             AssetServerPlugin.init({
                 assetUploadDir: path.join(__dirname, "__data__/assets"),
-                route: "assets"
+                route: "assets",
             }),
             DefaultSearchPlugin,
             AdminUiPlugin.init({
                 port: 3050,
-                route: "admin"
+                route: "admin",
             }),
             MpesaPlugin.init({
                 consumerKey: config.CONSUMER_KEY,
@@ -43,21 +43,21 @@ import { MpesaPlugin } from "../src/mpesa.plugin"
                 shortCode: config.SHORTCODE,
                 passkey: config.PASSKEY,
                 shortCodeType: config.SHORTCODE_TYPE,
-                vendureHost: config.VENDURE_HOST
-            })
+                vendureHost: config.VENDURE_HOST,
+            }),
         ],
         apiOptions: {
             shopApiPlayground: true,
-            adminApiPlayground: true
-        }
+            adminApiPlayground: true,
+        },
     })
 
     const { server } = createTestEnvironment(devConfig)
     await server.init({
         initialData: {
             ...initialData,
-            shippingMethods: [{ name: "Standard Shipping", price: 500 }]
+            shippingMethods: [{ name: "Standard Shipping", price: 500 }],
         },
-        productsCsvPath: path.join(__dirname, "product-import.csv")
+        productsCsvPath: path.join(__dirname, "product-import.csv"),
     })
 })()
