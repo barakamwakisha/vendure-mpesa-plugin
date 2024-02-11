@@ -29,9 +29,14 @@
         "allowSeparatedGroups": true
       },
     ],
-    "import/no-unresolved": "error",
-    "import/order": [
+    "import/no-unresolved": [
       "error",
+      {
+        "ignore": ["^msw/.+"],
+      }
+    ],
+    "import/order": [
+      "warn",
       {
         "groups": [
           "builtin",

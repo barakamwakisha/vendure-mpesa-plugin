@@ -10,11 +10,11 @@ export class MpesaShopResolver {
     @Mutation()
     async verifyMpesaTransaction(
         @Ctx() ctx: RequestContext,
-        @Args() args: { transactionId: string }
+        @Args() args: { transactionId: string },
     ): Promise<boolean> {
         const isSuccessful = await this.mpesaService.verifyMpesaPayment(
             ctx,
-            args.transactionId
+            args.transactionId,
         )
         return isSuccessful
     }

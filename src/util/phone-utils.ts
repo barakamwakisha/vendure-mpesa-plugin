@@ -6,7 +6,7 @@ export function formatPhoneNumber(number: string) {
 
     const { countryCallingCode, nationalNumber } = parsePhoneNumber(
         number,
-        "KE"
+        "KE",
     )
     return `${countryCallingCode}${nationalNumber}`
 }

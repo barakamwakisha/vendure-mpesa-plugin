@@ -3,7 +3,7 @@ import {
     ChannelService,
     LanguageCode,
     Logger,
-    RequestContext
+    RequestContext,
 } from "@vendure/core"
 
 import { CALLBACK_URL_ENDPOINT, loggerCtx } from "../constants"
@@ -14,7 +14,7 @@ import { STKCallbackPayload } from "../types"
 export class CallbackWebhookController {
     constructor(
         private channelService: ChannelService,
-        private mpesaService: MpesaService
+        private mpesaService: MpesaService,
     ) {}
 
     @Post()
@@ -22,7 +22,7 @@ export class CallbackWebhookController {
         const { CheckoutRequestID, ResultCode } = payload.Body.stkCallback
         Logger.info(
             `Mpesa Callback ${CheckoutRequestID}, status: ${ResultCode}`,
-            loggerCtx
+            loggerCtx,
         )
 
         const ctx = await this.createRequestContext()
@@ -36,7 +36,7 @@ export class CallbackWebhookController {
             isAuthorized: true,
             authorizedAsOwnerOnly: false,
             channel,
-            languageCode: LanguageCode.en
+            languageCode: LanguageCode.en,
         })
     }
 }

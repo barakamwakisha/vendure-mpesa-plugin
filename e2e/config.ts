@@ -10,7 +10,7 @@ const envSchema = z.object({
     PASSKEY: z.string(),
     ENVIRONMENT: z.enum(["sandbox", "live"]),
     SHORTCODE_TYPE: z.enum(["till", "paybill"]),
-    VENDURE_HOST: z.string()
+    VENDURE_HOST: z.string(),
 })
 
 export const config = envSchema.parse(process.env)

@@ -4,7 +4,7 @@ import {
     OrderService,
     Payment,
     RequestContext,
-    TransactionalConnection
+    TransactionalConnection,
 } from "@vendure/core"
 import axios, { AxiosInstance } from "axios"
 
@@ -13,7 +13,7 @@ import {
     LIVE_BASE_URL,
     MPESA_PLUGIN_INIT_OPTIONS,
     SANDBOX_BASE_URL,
-    loggerCtx
+    loggerCtx,
 } from "../constants"
 import { MpesaPluginOptions } from "../mpesa.plugin"
 import { STKPushResponse, STKStatusResponse, TokenResponse } from "../types"
@@ -27,13 +27,13 @@ export class MpesaService {
         @Inject(MPESA_PLUGIN_INIT_OPTIONS)
         private pluginOptions: MpesaPluginOptions,
         private connection: TransactionalConnection,
-        private orderService: OrderService
+        private orderService: OrderService,
     ) {}
 
     async initiateStkPush(
         amount: number,
         phoneNumber: string,
-        orderCode: string
+        orderCode: string,
     ) {
         const client = await this.getRequestClient()
 
@@ -58,8 +58,8 @@ export class MpesaService {
                     PhoneNumber: phoneNumber,
                     CallBackURL: this.getCallBackUrl(),
                     AccountReference: orderCode,
-                    TransactionDesc: "Vendure Order Payment"
-                }
+                    TransactionDesc: "Vendure Order Payment",
+                },
             )
 
             return data
@@ -82,8 +82,8 @@ export class MpesaService {
                     BusinessShortCode: shortCode,
                     Password: password,
                     Timestamp: timestamp,
-                    CheckoutRequestID: transactionId
-                }
+                    CheckoutRequestID: transactionId,
+                },
             )
 
             const isSuccessful =
@@ -93,7 +93,7 @@ export class MpesaService {
         } catch (err) {
             Logger.error(
                 `Couldn't query transaction ${transactionId} status`,
-                loggerCtx
+                loggerCtx,
             )
             return false
         }
@@ -118,7 +118,7 @@ export class MpesaService {
         if (isTransactionSuccessful) {
             Logger.info(
                 `Transaction ${transactionId} was successful`,
-                loggerCtx
+                loggerCtx,
             )
 
             if (payment) {
@@ -127,7 +127,7 @@ export class MpesaService {
         } else {
             Logger.info(
                 `Transaction ${transactionId} was not successful`,
-                loggerCtx
+                loggerCtx,
             )
             if (payment) {
                 await this.orderService.cancelPayment(ctx, payment.id)
@@ -160,7 +160,7 @@ export class MpesaService {
     private getTransactionPassword(timestamp: string): string {
         const { shortCode, passkey } = this.pluginOptions
         return Buffer.from(`${shortCode}${passkey}${timestamp}`).toString(
-            "base64"
+            "base64",
         )
     }
 
@@ -179,7 +179,7 @@ export class MpesaService {
 
         try {
             const { data } = await axios.get<TokenResponse>(url, {
-                headers: { Authorization: auth }
+                headers: { Authorization: auth },
             })
 
             this._accessToken = data.access_token
@@ -187,14 +187,14 @@ export class MpesaService {
             this._accessTokenExpiryDate.setSeconds(
                 this._accessTokenExpiryDate.getSeconds() +
                     parseInt(data.expires_in) -
-                    60
+                    60,
             )
 
             return data.access_token
         } catch (err) {
             Logger.error(
                 "Could not authenticate to the Mpesa API. Please check your consumer key, secret and environment configuration.",
-                loggerCtx
+                loggerCtx,
             )
             return ""
         }
@@ -205,26 +205,26 @@ export class MpesaService {
         return axios.create({
             baseURL: `${this.getBaseUrl()}/mpesa`,
             headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
+                Authorization: `Bearer ${accessToken}`,
+            },
         })
     }
 
     private async getPaymentByTransactionId(
         ctx: RequestContext,
-        transactionId: string
+        transactionId: string,
     ): Promise<Payment | undefined> {
         const payment = await this.connection
             .getRepository(ctx, Payment)
             .findOne({
                 where: { transactionId },
-                relations: ["order", "order.payments", "refunds"]
+                relations: ["order", "order.payments", "refunds"],
             })
 
         if (!payment) {
             Logger.error(
                 `There isn't a payment related with the transaction ID ${transactionId}`,
-                loggerCtx
+                loggerCtx,
             )
             return
         }
