@@ -1,4 +1,4 @@
-![Vendure Mpesa Plugin](assets/logo.png)
+![Vendure Mpesa Plugin](https://raw.githubusercontent.com/barakamwakisha/vendure-mpesa-plugin/main/assets/logo.png)
 
 # Vendure Mpesa Plugin
 
