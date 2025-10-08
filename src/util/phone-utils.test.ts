@@ -17,7 +17,7 @@ describe("phone-utils", () => {
         expect(isSafaricomNumber("0712345678")).toBe(true)
         expect(isSafaricomNumber("110345678")).toBe(true)
         expect(isSafaricomNumber("+254730123456")).toBe(false)
-        expect(isSafaricomNumber("0791123456")).toBe(false)
+        expect(isSafaricomNumber("0791123456")).toBe(true)
     })
 
     it("gets phone number from order in correct order", () => {

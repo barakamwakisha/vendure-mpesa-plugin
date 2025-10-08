@@ -61,6 +61,7 @@ export interface MpesaPluginOptions {
 @VendurePlugin({
     imports: [PluginCommonModule],
     controllers: [CallbackWebhookController],
+    compatibility: ">=3.4.1",
     configuration: config => {
         config.paymentOptions.paymentMethodHandlers.push(
             mpesaPaymentMethodHandler,

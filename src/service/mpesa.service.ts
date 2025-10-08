@@ -6,7 +6,7 @@ import {
     RequestContext,
     TransactionalConnection,
 } from "@vendure/core"
-import axios, { AxiosInstance } from "axios"
+import axios, { AxiosError, AxiosInstance } from "axios"
 
 import {
     CALLBACK_URL_ENDPOINT,
@@ -63,8 +63,14 @@ export class MpesaService {
             )
 
             return data
-        } catch (err) {
+        } catch (error) {
             Logger.error("Could not initiate STK push", loggerCtx)
+            if (error instanceof AxiosError) {
+                Logger.error(
+                    JSON.stringify(error.response?.data, null, 2),
+                    loggerCtx,
+                )
+            }
         }
     }
 
@@ -89,13 +95,24 @@ export class MpesaService {
             const isSuccessful =
                 data.ResultCode === "0" && data.ResponseCode === "0"
 
-            return isSuccessful
-        } catch (err) {
+            return { isSuccessful, message: data.ResultDesc }
+        } catch (error) {
             Logger.error(
                 `Couldn't query transaction ${transactionId} status`,
                 loggerCtx,
             )
-            return false
+
+            if (error instanceof AxiosError) {
+                Logger.error(
+                    JSON.stringify(error.response?.data, null, 2),
+                    loggerCtx,
+                )
+            }
+
+            return {
+                isSuccessful: false,
+                message: "Could not query transaction status",
+            }
         }
     }
 
@@ -110,12 +127,12 @@ export class MpesaService {
     }
 
     async settlePayment(ctx: RequestContext, transactionId: string) {
-        const isTransactionSuccessful =
+        const { isSuccessful, message } =
             await this.checkTransactionStatus(transactionId)
 
         const payment = await this.getPaymentByTransactionId(ctx, transactionId)
 
-        if (isTransactionSuccessful) {
+        if (isSuccessful) {
             Logger.info(
                 `Transaction ${transactionId} was successful`,
                 loggerCtx,
@@ -126,7 +143,7 @@ export class MpesaService {
             }
         } else {
             Logger.info(
-                `Transaction ${transactionId} was not successful`,
+                `Transaction ${transactionId} was not successful. ${message}`,
                 loggerCtx,
             )
             if (payment) {
@@ -191,11 +208,17 @@ export class MpesaService {
             )
 
             return data.access_token
-        } catch (err) {
+        } catch (error) {
             Logger.error(
                 "Could not authenticate to the Mpesa API. Please check your consumer key, secret and environment configuration.",
                 loggerCtx,
             )
+            if (error instanceof AxiosError) {
+                Logger.error(
+                    JSON.stringify(error.response?.data, null, 2),
+                    loggerCtx,
+                )
+            }
             return ""
         }
     }
