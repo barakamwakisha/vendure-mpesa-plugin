@@ -13,7 +13,7 @@ export function formatPhoneNumber(number: string) {
 
 export function isSafaricomNumber(number: string): boolean {
     const safaricomRegex =
-        /^(?:\+254|254|0)?(7[0124578][0-9]|74[0-6]|75[7-9]|76[89]|790|11[0-5])\d{6}$/
+        /^(?:\+254|254|0)?(7(?:0[1-9]|1[0-9]|2[0-9]|4[0-9]|5[0-9]|6[89]|9[0-9])|11[0-5])\d{6}$/
     return safaricomRegex.test(number)
 }
 

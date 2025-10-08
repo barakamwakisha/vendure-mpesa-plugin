@@ -8,7 +8,6 @@
     },
     "author": "Baraka Mwakisha <barakamwakisha@gmail.com>",
     "license": "MIT",
-    "private": false,
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "files": [
@@ -32,11 +31,11 @@
         "@changesets/cli": "^2.27.1",
         "@typescript-eslint/eslint-plugin": "^6.21.0",
         "@typescript-eslint/parser": "^6.21.0",
-        "@vendure/admin-ui-plugin": "^2.1.6",
-        "@vendure/asset-server-plugin": "^2.1.6",
-        "@vendure/core": "^2.1.6",
-        "@vendure/testing": "^2.1.6",
-        "@vendure/ui-devkit": "^2.1.6",
+        "@vendure/admin-ui-plugin": "^3.4.4",
+        "@vendure/asset-server-plugin": "^3.4.4",
+        "@vendure/core": "^3.4.4",
+        "@vendure/testing": "^3.4.4",
+        "@vendure/ui-devkit": "^3.4.4",
         "copyfiles": "^2.4.1",
         "eslint": "^8.56.0",
         "eslint-config-prettier": "^9.1.0",
@@ -65,5 +64,6 @@
         "**/*.*": [
             "yarn fix"
         ]
-    }
+    },
+    "packageManager": "yarn@4.6.0+sha512.5383cc12567a95f1d668fbe762dfe0075c595b4bfff433be478dbbe24e05251a8e8c3eb992a986667c1d53b6c3a9c85b8398c35a960587fbd9fa3a0915406728"
 }
