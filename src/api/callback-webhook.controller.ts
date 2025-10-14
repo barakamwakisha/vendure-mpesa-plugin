@@ -21,7 +21,7 @@ export class CallbackWebhookController {
     async handleCallback(@Body() payload: STKCallbackPayload) {
         const { CheckoutRequestID, ResultCode } = payload.Body.stkCallback
         Logger.info(
-            `Mpesa Callback ${CheckoutRequestID}, status: ${ResultCode}`,
+            `Callback received for transaction ${CheckoutRequestID}, status: ${ResultCode}`,
             loggerCtx,
         )
 

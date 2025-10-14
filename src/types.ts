@@ -36,3 +36,17 @@ export interface STKCallbackPayload {
         }
     }
 }
+
+export enum MpesaPaymentStatus {
+    SUCCESS = "SUCCESS",
+    FAILED = "FAILED",
+    PENDING = "PENDING",
+    NOT_FOUND = "NOT_FOUND",
+}
+
+export interface MpesaTransactionVerification {
+    status: MpesaPaymentStatus
+    transactionId: string
+    message: string
+    paymentState?: string
+}

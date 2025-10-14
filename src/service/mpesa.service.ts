@@ -16,7 +16,13 @@ import {
     loggerCtx,
 } from "../constants"
 import { MpesaPluginOptions } from "../mpesa.plugin"
-import { STKPushResponse, STKStatusResponse, TokenResponse } from "../types"
+import {
+    MpesaPaymentStatus,
+    MpesaTransactionVerification,
+    STKPushResponse,
+    STKStatusResponse,
+    TokenResponse,
+} from "../types"
 
 @Injectable()
 export class MpesaService {
@@ -58,7 +64,7 @@ export class MpesaService {
                     PhoneNumber: phoneNumber,
                     CallBackURL: this.getCallBackUrl(),
                     AccountReference: orderCode,
-                    TransactionDesc: "Vendure Order Payment",
+                    TransactionDesc: `${orderCode} Mpesa Payment`,
                 },
             )
 
@@ -116,14 +122,53 @@ export class MpesaService {
         }
     }
 
-    async verifyMpesaPayment(ctx: RequestContext, transactionId: string) {
+    async verifyMpesaPayment(
+        ctx: RequestContext,
+        transactionId: string,
+    ): Promise<MpesaTransactionVerification> {
         const payment = await this.getPaymentByTransactionId(ctx, transactionId)
 
         if (!payment) {
-            return false
+            return {
+                status: MpesaPaymentStatus.NOT_FOUND,
+                transactionId,
+                message: "No payment found for this transaction ID",
+            }
         }
 
-        return payment.state === "Settled"
+        const paymentState = payment.state
+
+        let status: MpesaPaymentStatus
+        let message: string
+
+        switch (paymentState) {
+            case "Settled":
+                status = MpesaPaymentStatus.SUCCESS
+                message = "Payment has been successfully completed"
+                break
+            case "Declined":
+            case "Error":
+            case "Cancelled":
+                status = MpesaPaymentStatus.FAILED
+                message = "Payment has failed"
+                break
+            case "Authorized":
+            case "Created":
+                status = MpesaPaymentStatus.PENDING
+                message = "Payment is still pending"
+                break
+            default:
+                status = MpesaPaymentStatus.PENDING
+                message = `Payment is in ${paymentState} state`
+                break
+        }
+
+        return {
+            status,
+            transactionId,
+            message,
+            paymentState,
+        }
     }
 
     async settlePayment(ctx: RequestContext, transactionId: string) {
@@ -131,6 +176,13 @@ export class MpesaService {
             await this.checkTransactionStatus(transactionId)
 
         const payment = await this.getPaymentByTransactionId(ctx, transactionId)
+        if (!payment) {
+            Logger.warn(
+                `No payment found for transaction ${transactionId}`,
+                loggerCtx,
+            )
+            return
+        }
 
         if (isSuccessful) {
             Logger.info(
@@ -138,17 +190,19 @@ export class MpesaService {
                 loggerCtx,
             )
 
-            if (payment) {
-                await this.orderService.settlePayment(ctx, payment.id)
-            }
+            await this.orderService.settlePayment(ctx, payment.id)
         } else {
             Logger.info(
                 `Transaction ${transactionId} was not successful. ${message}`,
                 loggerCtx,
             )
-            if (payment) {
-                await this.orderService.cancelPayment(ctx, payment.id)
-            }
+
+            await this.orderService.cancelPayment(ctx, payment.id)
+            await this.orderService.transitionToState(
+                ctx,
+                payment.order.id,
+                "ArrangingPayment",
+            )
         }
     }
 
