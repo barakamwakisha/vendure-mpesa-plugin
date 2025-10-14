@@ -6,27 +6,33 @@ import {
     RequestContext,
 } from "@vendure/core"
 
-import { CALLBACK_URL_ENDPOINT, loggerCtx } from "../constants"
+import { REVERSAL_CALLBACK_ENDPOINT, loggerCtx } from "../constants"
 import { MpesaService } from "../service/mpesa.service"
-import { STKCallbackPayload } from "../types"
+import { ReversalCallbackPayload } from "../types"
 
-@Controller(CALLBACK_URL_ENDPOINT)
-export class CallbackWebhookController {
+@Controller(REVERSAL_CALLBACK_ENDPOINT)
+export class ReversalCallbackController {
     constructor(
         private channelService: ChannelService,
         private mpesaService: MpesaService,
     ) {}
 
     @Post()
-    async handleCallback(@Body() payload: STKCallbackPayload) {
-        const { CheckoutRequestID, ResultCode } = payload.Body.stkCallback
+    async handleCallback(@Body() payload: ReversalCallbackPayload) {
+        const { OriginatorConversationID, TransactionID, ResultType } =
+            payload.Result
+
         Logger.info(
-            `Callback received for transaction ${CheckoutRequestID}, status: ${ResultCode}`,
+            `Reversal callback received for transaction ${TransactionID}, status: ${ResultType}, originatorConversationID: ${OriginatorConversationID}`,
             loggerCtx,
         )
 
         const ctx = await this.createRequestContext()
-        await this.mpesaService.settlePayment(ctx, CheckoutRequestID)
+        await this.mpesaService.handleReversalCallback(
+            ctx,
+            OriginatorConversationID,
+            ResultType,
+        )
     }
 
     private async createRequestContext(): Promise<RequestContext> {

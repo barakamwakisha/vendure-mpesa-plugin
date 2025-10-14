@@ -1,24 +1,30 @@
-import { Inject, Injectable } from "@nestjs/common"
+import crypto from "crypto"
+
+import { Injectable } from "@nestjs/common"
 import {
+    CreateRefundResult,
     Logger,
     OrderService,
     Payment,
+    PaymentMethod,
+    Refund,
     RequestContext,
     TransactionalConnection,
 } from "@vendure/core"
 import axios, { AxiosError, AxiosInstance } from "axios"
 
 import {
-    CALLBACK_URL_ENDPOINT,
     LIVE_BASE_URL,
-    MPESA_PLUGIN_INIT_OPTIONS,
+    REVERSAL_CALLBACK_ENDPOINT,
     SANDBOX_BASE_URL,
+    STK_PUSH_CALLBACK_ENDPOINT,
     loggerCtx,
 } from "../constants"
-import { MpesaPluginOptions } from "../mpesa.plugin"
 import {
+    MpesaConfig,
     MpesaPaymentStatus,
     MpesaTransactionVerification,
+    ReversalResponse,
     STKPushResponse,
     STKStatusResponse,
     TokenResponse,
@@ -26,24 +32,25 @@ import {
 
 @Injectable()
 export class MpesaService {
-    private _accessToken: string
-    private _accessTokenExpiryDate: Date
+    private _accessTokenCache = new Map<
+        string,
+        { token: string; expiryDate: Date }
+    >()
 
     constructor(
-        @Inject(MPESA_PLUGIN_INIT_OPTIONS)
-        private pluginOptions: MpesaPluginOptions,
         private connection: TransactionalConnection,
         private orderService: OrderService,
     ) {}
 
     async initiateStkPush(
+        config: MpesaConfig,
         amount: number,
         phoneNumber: string,
         orderCode: string,
     ) {
-        const client = await this.getRequestClient()
+        const client = await this.getRequestClient(config)
 
-        const { shortCodeType } = this.pluginOptions
+        const { shortCodeType } = config
         const transactionType =
             shortCodeType === "paybill"
                 ? "CustomerPayBillOnline"
@@ -54,15 +61,15 @@ export class MpesaService {
             const { data } = await client.post<STKPushResponse>(
                 "/stkpush/v1/processrequest",
                 {
-                    BusinessShortCode: this.pluginOptions.shortCode,
-                    Password: this.getTransactionPassword(timestamp),
+                    BusinessShortCode: config.shortCode,
+                    Password: this.getLnmPassword(config, timestamp),
                     Timestamp: timestamp,
                     TransactionType: transactionType,
                     Amount: amount,
                     PartyA: phoneNumber,
-                    PartyB: this.pluginOptions.shortCode,
+                    PartyB: config.shortCode,
                     PhoneNumber: phoneNumber,
-                    CallBackURL: this.getCallBackUrl(),
+                    CallBackURL: `${config.vendureHost}/${STK_PUSH_CALLBACK_ENDPOINT}`,
                     AccountReference: orderCode,
                     TransactionDesc: `${orderCode} Mpesa Payment`,
                 },
@@ -80,12 +87,12 @@ export class MpesaService {
         }
     }
 
-    async checkTransactionStatus(transactionId: string) {
-        const client = await this.getRequestClient()
+    async checkTransactionStatus(config: MpesaConfig, transactionId: string) {
+        const client = await this.getRequestClient(config)
 
-        const { shortCode } = this.pluginOptions
+        const { shortCode } = config
         const timestamp = this.getCurrentTimestamp()
-        const password = this.getTransactionPassword(timestamp)
+        const password = this.getLnmPassword(config, timestamp)
 
         try {
             const { data } = await client.post<STKStatusResponse>(
@@ -171,10 +178,11 @@ export class MpesaService {
         }
     }
 
-    async settlePayment(ctx: RequestContext, transactionId: string) {
-        const { isSuccessful, message } =
-            await this.checkTransactionStatus(transactionId)
-
+    async handleStkPushCallback(
+        ctx: RequestContext,
+        transactionId: string,
+        mpesaReceiptNumber?: string,
+    ) {
         const payment = await this.getPaymentByTransactionId(ctx, transactionId)
         if (!payment) {
             Logger.warn(
@@ -184,11 +192,33 @@ export class MpesaService {
             return
         }
 
+        const config = await this.getPaymentMethodConfig(ctx, payment)
+        if (!config) {
+            Logger.error(
+                `No payment method config found for payment ${payment.id}`,
+                loggerCtx,
+            )
+            return
+        }
+
+        const { isSuccessful, message } = await this.checkTransactionStatus(
+            config,
+            transactionId,
+        )
+
         if (isSuccessful) {
             Logger.info(
                 `Transaction ${transactionId} was successful`,
                 loggerCtx,
             )
+
+            if (mpesaReceiptNumber) {
+                payment.metadata = {
+                    ...payment.metadata,
+                    mpesaReceiptNumber,
+                }
+                await this.connection.getRepository(ctx, Payment).save(payment)
+            }
 
             await this.orderService.settlePayment(ctx, payment.id)
         } else {
@@ -206,65 +236,68 @@ export class MpesaService {
         }
     }
 
-    private getBaseUrl(): string {
-        return this.pluginOptions.environment === "sandbox"
-            ? SANDBOX_BASE_URL
-            : LIVE_BASE_URL
-    }
-
-    private getCallBackUrl(): string {
-        return `${this.pluginOptions.vendureHost}/${CALLBACK_URL_ENDPOINT}`
-    }
-
-    private getCurrentTimestamp(): string {
-        const now = new Date()
-        const year = now.getFullYear()
-        const month = (now.getMonth() + 1).toString().padStart(2, "0")
-        const day = now.getDate().toString().padStart(2, "0")
-        const hours = now.getHours().toString().padStart(2, "0")
-        const minutes = now.getMinutes().toString().padStart(2, "0")
-        const seconds = now.getSeconds().toString().padStart(2, "0")
-
-        return `${year}${month}${day}${hours}${minutes}${seconds}`
-    }
-
-    private getTransactionPassword(timestamp: string): string {
-        const { shortCode, passkey } = this.pluginOptions
-        return Buffer.from(`${shortCode}${passkey}${timestamp}`).toString(
-            "base64",
-        )
-    }
-
-    private async getAccessToken(): Promise<string> {
-        if (
-            this._accessToken &&
-            this._accessTokenExpiryDate &&
-            this._accessTokenExpiryDate > new Date()
-        ) {
-            return this._accessToken
+    async reversePayment(
+        ctx: RequestContext,
+        transactionId: string,
+        reason?: string,
+    ): Promise<CreateRefundResult> {
+        const payment = await this.getPaymentByTransactionId(ctx, transactionId)
+        if (!payment) {
+            Logger.warn(
+                `No payment found for transaction ${transactionId}`,
+                loggerCtx,
+            )
+            return {
+                state: "Failed",
+                transactionId: "",
+                metadata: {
+                    errorMessage: "No payment found for transaction",
+                },
+            }
         }
 
-        const { consumerKey, consumerSecret } = this.pluginOptions
-        const url = `${this.getBaseUrl()}/oauth/v1/generate?grant_type=client_credentials`
-        const auth = `Basic ${Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64")}`
+        const config = await this.getPaymentMethodConfig(ctx, payment)
+        if (!config) {
+            Logger.error(
+                `No payment method config found for payment ${payment.id}`,
+                loggerCtx,
+            )
+            return {
+                state: "Failed",
+                transactionId: "",
+                metadata: {
+                    errorMessage: "No payment method config found for payment",
+                },
+            }
+        }
 
+        const client = await this.getRequestClient(config)
         try {
-            const { data } = await axios.get<TokenResponse>(url, {
-                headers: { Authorization: auth },
-            })
-
-            this._accessToken = data.access_token
-            this._accessTokenExpiryDate = new Date()
-            this._accessTokenExpiryDate.setSeconds(
-                this._accessTokenExpiryDate.getSeconds() +
-                    parseInt(data.expires_in) -
-                    60,
+            const { data } = await client.post<ReversalResponse>(
+                "/reversal/v1/request",
+                {
+                    CommandID: "TransactionReversal",
+                    ReceiverParty: config.shortCode,
+                    RecieverIdentifierType: "11",
+                    Remarks: `Mpesa Reversal${reason ? `: ${reason}` : ""}`,
+                    Initiator: config.initiatorName,
+                    SecurityCredential: this.getSecurityCredential(config),
+                    QueueTimeOutURL: `${config.vendureHost}/${REVERSAL_CALLBACK_ENDPOINT}`,
+                    ResultURL: `${config.vendureHost}/${REVERSAL_CALLBACK_ENDPOINT}`,
+                    TransactionID: payment.metadata.mpesaReceiptNumber,
+                    Amount: Math.trunc(payment.amount / 100),
+                    Occasion: reason,
+                },
             )
 
-            return data.access_token
+            return {
+                state: "Pending",
+                transactionId: data.OriginatorConversationID,
+                metadata: {},
+            }
         } catch (error) {
             Logger.error(
-                "Could not authenticate to the Mpesa API. Please check your consumer key, secret and environment configuration.",
+                `Could not reverse payment ${transactionId}`,
                 loggerCtx,
             )
             if (error instanceof AxiosError) {
@@ -273,18 +306,49 @@ export class MpesaService {
                     loggerCtx,
                 )
             }
-            return ""
+            return {
+                state: "Failed",
+                transactionId: "",
+                metadata: {
+                    errorMessage: "Could not reverse payment",
+                },
+            }
         }
     }
 
-    private async getRequestClient(): Promise<AxiosInstance> {
-        const accessToken = await this.getAccessToken()
-        return axios.create({
-            baseURL: `${this.getBaseUrl()}/mpesa`,
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-        })
+    async handleReversalCallback(
+        ctx: RequestContext,
+        transactionId: string,
+        resultType: "0" | "1",
+    ) {
+        const refund = await this.connection
+            .getRepository(ctx, Refund)
+            .findOne({
+                where: { transactionId },
+            })
+
+        if (!refund) {
+            Logger.warn(
+                `No refund found for transaction ${transactionId}`,
+                loggerCtx,
+            )
+            return
+        }
+
+        if (resultType === "0") {
+            await this.orderService.settleRefund(ctx, {
+                id: refund.id,
+                transactionId,
+            })
+            Logger.info(`Refund ${transactionId} settled`, loggerCtx)
+        } else {
+            await this.orderService.transitionRefundToState(
+                ctx,
+                refund.id,
+                "Failed",
+            )
+            Logger.info(`Refund ${transactionId} failed`, loggerCtx)
+        }
     }
 
     private async getPaymentByTransactionId(
@@ -307,5 +371,126 @@ export class MpesaService {
         }
 
         return payment
+    }
+
+    private async getPaymentMethodConfig(
+        ctx: RequestContext,
+        payment: Payment,
+    ): Promise<MpesaConfig | undefined> {
+        const paymentWithMethod = await this.connection
+            .getRepository(ctx, Payment)
+            .findOne({
+                where: { id: payment.id },
+            })
+
+        if (!paymentWithMethod?.method) {
+            return undefined
+        }
+
+        const paymentMethodCode = paymentWithMethod.method
+
+        const paymentMethod = await this.connection
+            .getRepository(ctx, PaymentMethod)
+            .findOne({
+                where: { code: paymentMethodCode },
+            })
+
+        if (!paymentMethod) {
+            return undefined
+        }
+
+        return paymentMethod.handler.args as unknown as MpesaConfig
+    }
+
+    private async getRequestClient(
+        config: MpesaConfig,
+    ): Promise<AxiosInstance> {
+        const accessToken = await this.getAccessToken(config)
+        return axios.create({
+            baseURL: `${this.getBaseUrl(config)}/mpesa`,
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        })
+    }
+
+    private getBaseUrl(config: MpesaConfig): string {
+        return config.environment === "sandbox"
+            ? SANDBOX_BASE_URL
+            : LIVE_BASE_URL
+    }
+
+    private getCurrentTimestamp(): string {
+        const now = new Date()
+        const year = now.getFullYear()
+        const month = (now.getMonth() + 1).toString().padStart(2, "0")
+        const day = now.getDate().toString().padStart(2, "0")
+        const hours = now.getHours().toString().padStart(2, "0")
+        const minutes = now.getMinutes().toString().padStart(2, "0")
+        const seconds = now.getSeconds().toString().padStart(2, "0")
+
+        return `${year}${month}${day}${hours}${minutes}${seconds}`
+    }
+
+    private getSecurityCredential(config: MpesaConfig): string {
+        const passwordBuffer = Buffer.from(config.initiatorPassword)
+        const encryptedPassword = crypto.publicEncrypt(
+            {
+                key: config.apiCertificate,
+                padding: crypto.constants.RSA_PKCS1_PADDING,
+            },
+            passwordBuffer,
+        )
+        return encryptedPassword.toString("base64")
+    }
+
+    private getLnmPassword(config: MpesaConfig, timestamp: string): string {
+        const { shortCode, passkey } = config
+        return Buffer.from(`${shortCode}${passkey}${timestamp}`).toString(
+            "base64",
+        )
+    }
+
+    private async getAccessToken(config: MpesaConfig): Promise<string> {
+        const cacheKey = `${config.consumerKey}:${config.environment}`
+        const cached = this._accessTokenCache.get(cacheKey)
+
+        if (cached && cached.expiryDate > new Date()) {
+            return cached.token
+        }
+
+        const { consumerKey, consumerSecret } = config
+        const url = `${this.getBaseUrl(config)}/oauth/v1/generate?grant_type=client_credentials`
+        const auth = `Basic ${Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64")}`
+
+        try {
+            const { data } = await axios.get<TokenResponse>(url, {
+                headers: { Authorization: auth },
+            })
+
+            const expiryDate = new Date()
+            expiryDate.setSeconds(
+                expiryDate.getSeconds() + parseInt(data.expires_in) - 60,
+            )
+
+            this._accessTokenCache.set(cacheKey, {
+                token: data.access_token,
+                expiryDate,
+            })
+
+            return data.access_token
+        } catch (error) {
+            Logger.error(
+                "Could not authenticate to the Mpesa API. Please check your consumer key, secret and environment configuration.",
+                loggerCtx,
+            )
+            if (error instanceof AxiosError) {
+                Logger.error(
+                    JSON.stringify(error.response?.data, null, 2),
+                    loggerCtx,
+                )
+            }
+            return ""
+        }
     }
 }
