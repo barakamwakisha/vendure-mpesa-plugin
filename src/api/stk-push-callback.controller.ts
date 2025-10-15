@@ -19,17 +19,18 @@ export class StkPushCallbackController {
 
     @Post()
     async handleCallback(@Body() payload: STKCallbackPayload) {
-        const { CheckoutRequestID, ResultCode, CallbackMetadata } =
+        const { CheckoutRequestID, ResultDesc, ResultCode, CallbackMetadata } =
             payload.Body.stkCallback
 
-        const mpesaReceiptNumber = CallbackMetadata.Item.find(
+        const mpesaReceiptNumber = CallbackMetadata?.Item.find(
             item => item.Name === "MpesaReceiptNumber",
         )?.Value
 
         Logger.info(
-            `STK Push callback received for transaction ${CheckoutRequestID}, status: ${ResultCode}, mpesaReceiptNumber: ${mpesaReceiptNumber}`,
+            `STK Push callback received for transaction ${CheckoutRequestID}, status: ${ResultCode}`,
             loggerCtx,
         )
+        Logger.info(ResultDesc, loggerCtx)
 
         const ctx = await this.createRequestContext()
         await this.mpesaService.handleStkPushCallback(

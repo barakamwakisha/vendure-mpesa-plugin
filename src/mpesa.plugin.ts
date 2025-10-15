@@ -2,6 +2,7 @@ import { PluginCommonModule, VendurePlugin } from "@vendure/core"
 
 import { shopApiExtensions } from "./api/api-extensions"
 import { MpesaShopResolver } from "./api/mpesa-shop.resolver"
+import { ReversalCallbackController } from "./api/reversal-callback.controller"
 import { StkPushCallbackController } from "./api/stk-push-callback.controller"
 import { mpesaEligibilityChecker } from "./config/mpesa-eligibility-checker"
 import { mpesaPaymentMethodHandler } from "./config/mpesa.handler"
@@ -32,7 +33,7 @@ import { MpesaService } from "./service/mpesa.service"
  */
 @VendurePlugin({
     imports: [PluginCommonModule],
-    controllers: [StkPushCallbackController],
+    controllers: [StkPushCallbackController, ReversalCallbackController],
     compatibility: ">=3.4.1",
     configuration: config => {
         config.paymentOptions.paymentMethodHandlers.push(

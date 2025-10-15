@@ -27,7 +27,7 @@ export interface STKCallbackPayload {
             CheckoutRequestID: string
             ResultCode: number
             ResultDesc: string
-            CallbackMetadata: {
+            CallbackMetadata?: {
                 Item: {
                     Name: string
                     Value: string

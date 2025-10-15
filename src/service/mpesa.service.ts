@@ -1,4 +1,4 @@
-import crypto from "crypto"
+import crypto, { X509Certificate } from "crypto"
 
 import { Injectable } from "@nestjs/common"
 import {
@@ -231,7 +231,7 @@ export class MpesaService {
             await this.orderService.transitionToState(
                 ctx,
                 payment.order.id,
-                "ArrangingPayment",
+                "ArrangingAdditionalPayment",
             )
         }
     }
@@ -399,7 +399,13 @@ export class MpesaService {
             return undefined
         }
 
-        return paymentMethod.handler.args as unknown as MpesaConfig
+        const config = Object.fromEntries(
+            (
+                paymentMethod.handler.args as { name: string; value: unknown }[]
+            ).map(({ name, value }) => [name, value]),
+        ) as unknown as MpesaConfig
+
+        return config
     }
 
     private async getRequestClient(
@@ -430,18 +436,6 @@ export class MpesaService {
         const seconds = now.getSeconds().toString().padStart(2, "0")
 
         return `${year}${month}${day}${hours}${minutes}${seconds}`
-    }
-
-    private getSecurityCredential(config: MpesaConfig): string {
-        const passwordBuffer = Buffer.from(config.initiatorPassword)
-        const encryptedPassword = crypto.publicEncrypt(
-            {
-                key: config.apiCertificate,
-                padding: crypto.constants.RSA_PKCS1_PADDING,
-            },
-            passwordBuffer,
-        )
-        return encryptedPassword.toString("base64")
     }
 
     private getLnmPassword(config: MpesaConfig, timestamp: string): string {
@@ -492,5 +486,42 @@ export class MpesaService {
             }
             return ""
         }
+    }
+
+    private getSecurityCredential(config: MpesaConfig): string {
+        const passwordBuffer = Buffer.from(config.initiatorPassword)
+        const cert = new X509Certificate(
+            this.rebuildPemFromSingleLineCert(config.apiCertificate),
+        )
+
+        const encryptedPassword = crypto.publicEncrypt(
+            {
+                key: cert.publicKey,
+                padding: crypto.constants.RSA_PKCS1_PADDING,
+            },
+            passwordBuffer,
+        )
+        return encryptedPassword.toString("base64")
+    }
+
+    private rebuildPemFromSingleLineCert(input: string): string {
+        let s = String(input).trim()
+        s = s.replace(/\\n/g, "\n")
+
+        s = s
+            .replace(/-----BEGIN CERTIFICATE-----/g, "")
+            .replace(/-----END CERTIFICATE-----/g, "")
+
+        const base64Only = s.replace(/\s+/g, "")
+
+        if (!/^[A-Za-z0-9+/=]+$/.test(base64Only) || base64Only.length < 100) {
+            throw new Error(
+                "Input does not look like a valid base64 certificate payload.",
+            )
+        }
+
+        const folded = base64Only.match(/.{1,64}/g)!.join("\n")
+
+        return `-----BEGIN CERTIFICATE-----\n${folded}\n-----END CERTIFICATE-----\n`
     }
 }

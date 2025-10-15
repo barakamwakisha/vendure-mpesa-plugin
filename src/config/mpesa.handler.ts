@@ -31,6 +31,9 @@ export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
                     value: "The consumer key from Safaricom Developer Portal",
                 },
             ],
+            ui: {
+                component: "password-form-input",
+            },
         },
         consumerSecret: {
             type: "string",
@@ -46,6 +49,9 @@ export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
                     value: "The consumer secret from Safaricom Developer Portal",
                 },
             ],
+            ui: {
+                component: "password-form-input",
+            },
         },
         environment: {
             type: "string",
@@ -93,6 +99,9 @@ export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
                     value: "The passkey provided by Safaricom for STK Push",
                 },
             ],
+            ui: {
+                component: "password-form-input",
+            },
         },
         shortCode: {
             type: "string",
@@ -170,6 +179,9 @@ export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
                     value: "The initiator password for B2C transactions and reversals",
                 },
             ],
+            ui: {
+                component: "password-form-input",
+            },
         },
         apiCertificate: {
             type: "string",
@@ -182,9 +194,12 @@ export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
             description: [
                 {
                     languageCode: LanguageCode.en,
-                    value: "The Mpesa API certificate for security credential encryption available on the Safaricom Developer Portal",
+                    value: "The Mpesa API certificate for security credential encryption. Starts with '-----BEGIN CERTIFICATE-----'. Available on the Safaricom Developer Portal",
                 },
             ],
+            ui: {
+                component: "password-form-input",
+            },
         },
         vendureHost: {
             type: "string",

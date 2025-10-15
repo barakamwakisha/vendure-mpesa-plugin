@@ -1,6 +1,6 @@
 {
     "name": "vendure-mpesa-plugin",
-    "version": "0.0.14",
+    "version": "0.0.17",
     "description": "Accept Mpesa payments on your Vendure store",
     "repository": {
         "type": "git",
