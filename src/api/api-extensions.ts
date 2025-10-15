@@ -5,7 +5,6 @@ export const shopApiExtensions = gql`
         SUCCESS
         FAILED
         PENDING
-        NOT_FOUND
     }
 
     type MpesaTransactionVerification {

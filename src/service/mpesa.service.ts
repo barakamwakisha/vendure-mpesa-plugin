@@ -38,6 +38,7 @@ import {
     STKStatusResponse,
     TokenResponse,
 } from "../types"
+import { formatPhoneNumber } from "../util/phone-utils"
 
 @Injectable()
 export class MpesaService {
@@ -93,6 +94,7 @@ export class MpesaService {
 
             const client = await this.getRequestClient(config)
 
+            const formattedPhoneNumber = formatPhoneNumber(phoneNumber)
             const { data } = await client.post<STKPushResponse>(
                 "/stkpush/v1/processrequest",
                 {
@@ -100,10 +102,10 @@ export class MpesaService {
                     Password: this.getLnmPassword(config, timestamp),
                     Timestamp: timestamp,
                     TransactionType: transactionType,
-                    Amount: totalWithTax,
-                    PartyA: phoneNumber,
+                    Amount: Math.trunc(totalWithTax / 100),
+                    PartyA: formattedPhoneNumber,
                     PartyB: config.shortCode,
-                    PhoneNumber: phoneNumber,
+                    PhoneNumber: formattedPhoneNumber,
                     CallBackURL: `${config.vendureHost}/${STK_PUSH_CALLBACK_ENDPOINT}`,
                     AccountReference: code,
                     TransactionDesc: `${code} Mpesa Payment`,
@@ -111,16 +113,16 @@ export class MpesaService {
             )
 
             if (data.ResponseCode !== "0") {
-                await this.orderService.updateCustomFields(ctx, order.id, {
-                    mpesaCheckoutRequestID: data.CheckoutRequestID,
-                })
-
                 return {
                     success: false,
                     transactionId: "",
                     message: data.ResponseDescription,
                 }
             }
+
+            await this.orderService.updateCustomFields(ctx, order.id, {
+                mpesaCheckoutRequestID: data.CheckoutRequestID,
+            })
 
             return {
                 success: true,
@@ -245,13 +247,18 @@ export class MpesaService {
             )
 
             // Flag the transaction as failed by setting the internal checkoutRequestID custom field on the order to null
-            const payment = await this.getPaymentByTransactionId(
-                ctx,
-                CheckoutRequestID,
-            )
-            if (!payment) return
+            const order = await this.connection
+                .getRepository(ctx, Order)
+                .findOne({
+                    where: {
+                        customFields: {
+                            mpesaCheckoutRequestID: CheckoutRequestID,
+                        },
+                    },
+                })
+            if (!order) return
 
-            await this.orderService.updateCustomFields(ctx, payment.order.id, {
+            await this.orderService.updateCustomFields(ctx, order.id, {
                 mpesaCheckoutRequestID: null,
             })
             return
@@ -356,8 +363,9 @@ export class MpesaService {
                 },
             )
 
+            // TODO: Investigate refund state transition error. Reversal is still processed
             return {
-                state: "Pending",
+                state: "Created",
                 transactionId: payment.metadata.mpesaReceiptNumber,
                 metadata: {
                     conversationID: data.OriginatorConversationID,
@@ -376,10 +384,7 @@ export class MpesaService {
             }
             return {
                 state: "Failed",
-                transactionId: "",
-                metadata: {
-                    errorMessage: "Could not reverse payment",
-                },
+                transactionId: payment.metadata.mpesaReceiptNumber,
             }
         }
     }
@@ -435,7 +440,7 @@ export class MpesaService {
             })
 
         if (!payment) {
-            Logger.error(
+            Logger.warn(
                 `There isn't a payment related with the transaction ID ${transactionId}`,
                 loggerCtx,
             )

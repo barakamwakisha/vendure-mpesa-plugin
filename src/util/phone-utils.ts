@@ -1,4 +1,3 @@
-import { Order } from "@vendure/core"
 import { isValidPhoneNumber, parsePhoneNumber } from "libphonenumber-js"
 
 export function formatPhoneNumber(number: string) {
@@ -9,20 +8,4 @@ export function formatPhoneNumber(number: string) {
         "KE",
     )
     return `${countryCallingCode}${nationalNumber}`
-}
-
-export function isSafaricomNumber(number: string): boolean {
-    const safaricomRegex =
-        /^(?:\+254|254|0)?(7(?:0[1-9]|1[0-9]|2[0-9]|4[0-9]|5[0-9]|6[89]|9[0-9])|11[0-5])\d{6}$/
-    return safaricomRegex.test(number)
-}
-
-export function getPhoneNumberFromOrder(order: Order): string | undefined {
-    const { billingAddress, shippingAddress, customer } = order
-    const number =
-        billingAddress.phoneNumber ||
-        shippingAddress.phoneNumber ||
-        customer?.phoneNumber
-
-    if (number) return formatPhoneNumber(number)
 }
