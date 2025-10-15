@@ -1,3 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { CustomOrderFields } from "@vendure/core/dist/entity/custom-entity-fields"
+
+declare module "@vendure/core/dist/entity/custom-entity-fields" {
+    interface CustomOrderFields {
+        mpesaCheckoutRequestID: string | null
+    }
+}
+
 export interface TokenResponse {
     access_token: string
     expires_in: string
@@ -46,7 +55,7 @@ export interface ReversalResponse {
 
 export interface ReversalCallbackPayload {
     Result: {
-        ResultType: "0" | "1"
+        ResultType: 0 | 1
         ResultCode: string
         ResultDesc: string
         OriginatorConversationID: string
@@ -71,7 +80,6 @@ export enum MpesaPaymentStatus {
     SUCCESS = "SUCCESS",
     FAILED = "FAILED",
     PENDING = "PENDING",
-    NOT_FOUND = "NOT_FOUND",
 }
 
 export interface MpesaTransactionVerification {
@@ -79,6 +87,12 @@ export interface MpesaTransactionVerification {
     transactionId: string
     message: string
     paymentState?: string
+}
+
+export interface MpesaTransactionInitiation {
+    success: boolean
+    transactionId?: string
+    message: string
 }
 
 /**

@@ -6,8 +6,6 @@ import {
 } from "@vendure/core"
 
 import { MpesaService } from "../service/mpesa.service"
-import { MpesaConfig } from "../types"
-import { getPhoneNumberFromOrder } from "../util/phone-utils"
 
 let mpesaService: MpesaService
 
@@ -222,43 +220,25 @@ export const mpesaPaymentMethodHandler = new PaymentMethodHandler({
     },
 
     createPayment: async (
+        ctx,
         _,
-        order,
         amount,
-        args,
+        __,
+        metadata,
     ): Promise<CreatePaymentResult> => {
-        try {
-            const config = args as MpesaConfig
-            const amountInShillings = Math.ceil(amount / 100)
-
-            // Phone number is guaranteed to be present in the eligibility checker
-            const phoneNumber = getPhoneNumberFromOrder(order)!
-            const result = await mpesaService.initiateStkPush(
-                config,
-                amountInShillings,
-                phoneNumber,
-                order.code,
+        if (ctx.apiType !== "admin") {
+            throw Error(
+                `CreatePayment is not allowed for apiType '${ctx.apiType}'`,
             )
+        }
 
-            if (!result) {
-                return {
-                    amount: order.totalWithTax,
-                    state: "Declined",
-                    errorMessage: "Could not initiate Mpesa payment.",
-                }
-            }
-
-            return {
-                amount: order.totalWithTax,
-                state: "Authorized",
-                transactionId: result.CheckoutRequestID,
-            }
-        } catch (error) {
-            return {
-                amount: order.totalWithTax,
-                state: "Declined",
-                errorMessage: "Could not initiate Mpesa payment.",
-            }
+        return {
+            amount,
+            state: "Settled",
+            transactionId: metadata.CheckoutRequestID,
+            metadata: {
+                mpesaReceiptNumber: metadata.MpesaReceiptNumber,
+            },
         }
     },
     settlePayment: async () => {

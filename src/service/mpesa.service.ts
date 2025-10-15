@@ -2,17 +2,23 @@ import crypto, { X509Certificate } from "crypto"
 
 import { Injectable } from "@nestjs/common"
 import {
+    ActiveOrderService,
     CreateRefundResult,
+    CurrencyCode,
     Logger,
+    Order,
     OrderService,
+    OrderStateTransitionError,
     Payment,
     PaymentMethod,
     Refund,
     RequestContext,
     TransactionalConnection,
+    UserInputError,
 } from "@vendure/core"
 import axios, { AxiosError, AxiosInstance } from "axios"
 
+import { mpesaPaymentMethodHandler } from "../config/mpesa.handler"
 import {
     LIVE_BASE_URL,
     REVERSAL_CALLBACK_ENDPOINT,
@@ -23,8 +29,11 @@ import {
 import {
     MpesaConfig,
     MpesaPaymentStatus,
+    MpesaTransactionInitiation,
     MpesaTransactionVerification,
+    ReversalCallbackPayload,
     ReversalResponse,
+    STKCallbackPayload,
     STKPushResponse,
     STKStatusResponse,
     TokenResponse,
@@ -38,26 +47,52 @@ export class MpesaService {
     >()
 
     constructor(
+        private activeOrderService: ActiveOrderService,
         private connection: TransactionalConnection,
         private orderService: OrderService,
     ) {}
 
     async initiateStkPush(
-        config: MpesaConfig,
-        amount: number,
+        ctx: RequestContext,
         phoneNumber: string,
-        orderCode: string,
-    ) {
-        const client = await this.getRequestClient(config)
+    ): Promise<MpesaTransactionInitiation> {
+        const sessionOrder = await this.activeOrderService.getActiveOrder(
+            ctx,
+            undefined,
+        )
+        if (!sessionOrder) {
+            throw new UserInputError("No active order found for session")
+        }
 
-        const { shortCodeType } = config
-        const transactionType =
-            shortCodeType === "paybill"
-                ? "CustomerPayBillOnline"
-                : "CustomerBuyGoodsOnline"
-        const timestamp = this.getCurrentTimestamp()
+        const order = await this.orderService.findOne(ctx, sessionOrder.id, [
+            "customer",
+        ])
+        if (!order) {
+            // This should never happen
+            throw new UserInputError("No order found for active session")
+        }
+
+        const { totalWithTax, customer, currencyCode, code } = order
+        if (!customer) {
+            throw new UserInputError("No customer found for active order")
+        }
+
+        if (currencyCode !== CurrencyCode.KES) {
+            throw new UserInputError("Mpesa only supports KES currency")
+        }
 
         try {
+            const config = await this.getMpesaConfig(ctx)
+
+            const { shortCodeType } = config
+            const transactionType =
+                shortCodeType === "paybill"
+                    ? "CustomerPayBillOnline"
+                    : "CustomerBuyGoodsOnline"
+            const timestamp = this.getCurrentTimestamp()
+
+            const client = await this.getRequestClient(config)
+
             const { data } = await client.post<STKPushResponse>(
                 "/stkpush/v1/processrequest",
                 {
@@ -65,24 +100,49 @@ export class MpesaService {
                     Password: this.getLnmPassword(config, timestamp),
                     Timestamp: timestamp,
                     TransactionType: transactionType,
-                    Amount: amount,
+                    Amount: totalWithTax,
                     PartyA: phoneNumber,
                     PartyB: config.shortCode,
                     PhoneNumber: phoneNumber,
                     CallBackURL: `${config.vendureHost}/${STK_PUSH_CALLBACK_ENDPOINT}`,
-                    AccountReference: orderCode,
-                    TransactionDesc: `${orderCode} Mpesa Payment`,
+                    AccountReference: code,
+                    TransactionDesc: `${code} Mpesa Payment`,
                 },
             )
 
-            return data
+            if (data.ResponseCode !== "0") {
+                await this.orderService.updateCustomFields(ctx, order.id, {
+                    mpesaCheckoutRequestID: data.CheckoutRequestID,
+                })
+
+                return {
+                    success: false,
+                    transactionId: "",
+                    message: data.ResponseDescription,
+                }
+            }
+
+            return {
+                success: true,
+                transactionId: data.CheckoutRequestID,
+                message: data.ResponseDescription,
+            }
         } catch (error) {
-            Logger.error("Could not initiate STK push", loggerCtx)
+            Logger.error(
+                `Could not initiate STK push ${(error as Error).message}`,
+                loggerCtx,
+            )
             if (error instanceof AxiosError) {
                 Logger.error(
                     JSON.stringify(error.response?.data, null, 2),
                     loggerCtx,
                 )
+            }
+
+            return {
+                success: false,
+                transactionId: "",
+                message: "Could not initiate STK push",
             }
         }
     }
@@ -134,106 +194,125 @@ export class MpesaService {
         transactionId: string,
     ): Promise<MpesaTransactionVerification> {
         const payment = await this.getPaymentByTransactionId(ctx, transactionId)
-
-        if (!payment) {
+        if (payment) {
             return {
-                status: MpesaPaymentStatus.NOT_FOUND,
+                status: MpesaPaymentStatus.SUCCESS,
                 transactionId,
-                message: "No payment found for this transaction ID",
+                message: "Payment has been successfully completed",
+                paymentState: payment.state,
             }
         }
 
-        const paymentState = payment.state
-
-        let status: MpesaPaymentStatus
-        let message: string
-
-        switch (paymentState) {
-            case "Settled":
-                status = MpesaPaymentStatus.SUCCESS
-                message = "Payment has been successfully completed"
-                break
-            case "Declined":
-            case "Error":
-            case "Cancelled":
-                status = MpesaPaymentStatus.FAILED
-                message = "Payment has failed"
-                break
-            case "Authorized":
-            case "Created":
-                status = MpesaPaymentStatus.PENDING
-                message = "Payment is still pending"
-                break
-            default:
-                status = MpesaPaymentStatus.PENDING
-                message = `Payment is in ${paymentState} state`
-                break
+        const order = await this.connection.getRepository(ctx, Order).findOne({
+            where: {
+                customFields: {
+                    mpesaCheckoutRequestID: transactionId,
+                },
+            },
+        })
+        if (!order) {
+            // The mpesaCheckoutRequestID custom field is set to null when the payment is failed
+            return {
+                status: MpesaPaymentStatus.FAILED,
+                transactionId,
+                message: "Payment has failed",
+            }
         }
 
         return {
-            status,
+            status: MpesaPaymentStatus.PENDING,
             transactionId,
-            message,
-            paymentState,
+            message: "Payment is still pending",
         }
     }
 
     async handleStkPushCallback(
         ctx: RequestContext,
-        transactionId: string,
-        mpesaReceiptNumber?: string,
+        payload: STKCallbackPayload,
     ) {
-        const payment = await this.getPaymentByTransactionId(ctx, transactionId)
-        if (!payment) {
-            Logger.warn(
-                `No payment found for transaction ${transactionId}`,
-                loggerCtx,
-            )
-            return
-        }
+        const { CheckoutRequestID, CallbackMetadata } = payload.Body.stkCallback
 
-        const config = await this.getPaymentMethodConfig(ctx, payment)
-        if (!config) {
-            Logger.error(
-                `No payment method config found for payment ${payment.id}`,
-                loggerCtx,
-            )
-            return
-        }
+        const config = await this.getMpesaConfig(ctx)
 
         const { isSuccessful, message } = await this.checkTransactionStatus(
             config,
-            transactionId,
+            CheckoutRequestID,
         )
-
-        if (isSuccessful) {
-            Logger.info(
-                `Transaction ${transactionId} was successful`,
+        if (!isSuccessful) {
+            Logger.warn(
+                `Transaction ${CheckoutRequestID} failed. ${message}`,
                 loggerCtx,
             )
 
-            if (mpesaReceiptNumber) {
-                payment.metadata = {
-                    ...payment.metadata,
-                    mpesaReceiptNumber,
+            // Flag the transaction as failed by setting the internal checkoutRequestID custom field on the order to null
+            const payment = await this.getPaymentByTransactionId(
+                ctx,
+                CheckoutRequestID,
+            )
+            if (!payment) return
+
+            await this.orderService.updateCustomFields(ctx, payment.order.id, {
+                mpesaCheckoutRequestID: null,
+            })
+            return
+        }
+
+        this.connection.withTransaction(ctx, async () => {
+            const order = await this.connection
+                .getRepository(ctx, Order)
+                .findOne({
+                    where: {
+                        customFields: {
+                            mpesaCheckoutRequestID: CheckoutRequestID,
+                        },
+                    },
+                })
+            if (!order) return
+
+            if (order.state !== "ArrangingPayment") {
+                const transitionResult =
+                    await this.orderService.transitionToState(
+                        ctx,
+                        order.id,
+                        "ArrangingPayment",
+                    )
+
+                if (transitionResult instanceof OrderStateTransitionError) {
+                    Logger.error(
+                        `Error transitioning order ${order.code} to ArrangingPayment state: ${transitionResult.message}`,
+                        loggerCtx,
+                    )
+                    return
                 }
-                await this.connection.getRepository(ctx, Payment).save(payment)
             }
 
-            await this.orderService.settlePayment(ctx, payment.id)
-        } else {
+            const mpesaReceiptNumber =
+                CallbackMetadata?.Item?.find(
+                    item => item.Name === "MpesaReceiptNumber",
+                )?.Value ?? "N/A"
+
+            const addPaymentToOrderResult =
+                await this.orderService.addPaymentToOrder(ctx, order.id, {
+                    method: mpesaPaymentMethodHandler.code,
+                    metadata: {
+                        CheckoutRequestID,
+                        MpesaReceiptNumber: mpesaReceiptNumber,
+                    },
+                })
+
+            if (!(addPaymentToOrderResult instanceof Order)) {
+                Logger.error(
+                    `Error adding payment to order ${order.code}: ${addPaymentToOrderResult.message}`,
+                    loggerCtx,
+                )
+                return
+            }
+
             Logger.info(
-                `Transaction ${transactionId} was not successful. ${message}`,
+                `Mpesa Payment ${mpesaReceiptNumber} added to order ${order.code}`,
                 loggerCtx,
             )
-
-            await this.orderService.cancelPayment(ctx, payment.id)
-            await this.orderService.transitionToState(
-                ctx,
-                payment.order.id,
-                "ArrangingAdditionalPayment",
-            )
-        }
+        })
     }
 
     async reversePayment(
@@ -256,23 +335,10 @@ export class MpesaService {
             }
         }
 
-        const config = await this.getPaymentMethodConfig(ctx, payment)
-        if (!config) {
-            Logger.error(
-                `No payment method config found for payment ${payment.id}`,
-                loggerCtx,
-            )
-            return {
-                state: "Failed",
-                transactionId: "",
-                metadata: {
-                    errorMessage: "No payment method config found for payment",
-                },
-            }
-        }
-
-        const client = await this.getRequestClient(config)
         try {
+            const config = await this.getMpesaConfig(ctx)
+            const client = await this.getRequestClient(config)
+
             const { data } = await client.post<ReversalResponse>(
                 "/reversal/v1/request",
                 {
@@ -292,8 +358,10 @@ export class MpesaService {
 
             return {
                 state: "Pending",
-                transactionId: data.OriginatorConversationID,
-                metadata: {},
+                transactionId: payment.metadata.mpesaReceiptNumber,
+                metadata: {
+                    conversationID: data.OriginatorConversationID,
+                },
             }
         } catch (error) {
             Logger.error(
@@ -318,36 +386,40 @@ export class MpesaService {
 
     async handleReversalCallback(
         ctx: RequestContext,
-        transactionId: string,
-        resultType: "0" | "1",
+        payload: ReversalCallbackPayload,
     ) {
+        const { ResultType, ResultDesc, TransactionID } = payload.Result
+
         const refund = await this.connection
             .getRepository(ctx, Refund)
             .findOne({
-                where: { transactionId },
+                where: { transactionId: TransactionID },
             })
 
         if (!refund) {
             Logger.warn(
-                `No refund found for transaction ${transactionId}`,
+                `No refund found for transaction ${TransactionID}`,
                 loggerCtx,
             )
             return
         }
 
-        if (resultType === "0") {
+        if (ResultType === 0) {
             await this.orderService.settleRefund(ctx, {
                 id: refund.id,
-                transactionId,
+                transactionId: TransactionID,
             })
-            Logger.info(`Refund ${transactionId} settled`, loggerCtx)
+            Logger.info(`Refund ${TransactionID} settled`, loggerCtx)
         } else {
             await this.orderService.transitionRefundToState(
                 ctx,
                 refund.id,
                 "Failed",
             )
-            Logger.info(`Refund ${transactionId} failed`, loggerCtx)
+            Logger.info(
+                `Refund ${TransactionID} failed. ${ResultDesc}`,
+                loggerCtx,
+            )
         }
     }
 
@@ -373,30 +445,16 @@ export class MpesaService {
         return payment
     }
 
-    private async getPaymentMethodConfig(
-        ctx: RequestContext,
-        payment: Payment,
-    ): Promise<MpesaConfig | undefined> {
-        const paymentWithMethod = await this.connection
-            .getRepository(ctx, Payment)
-            .findOne({
-                where: { id: payment.id },
-            })
-
-        if (!paymentWithMethod?.method) {
-            return undefined
-        }
-
-        const paymentMethodCode = paymentWithMethod.method
-
+    private async getMpesaConfig(ctx: RequestContext): Promise<MpesaConfig> {
         const paymentMethod = await this.connection
             .getRepository(ctx, PaymentMethod)
             .findOne({
-                where: { code: paymentMethodCode },
+                where: { code: mpesaPaymentMethodHandler.code },
             })
 
         if (!paymentMethod) {
-            return undefined
+            Logger.error("Mpesa payment method not found", loggerCtx)
+            throw new Error("Mpesa payment method not found")
         }
 
         const config = Object.fromEntries(
@@ -412,6 +470,7 @@ export class MpesaService {
         config: MpesaConfig,
     ): Promise<AxiosInstance> {
         const accessToken = await this.getAccessToken(config)
+
         return axios.create({
             baseURL: `${this.getBaseUrl(config)}/mpesa`,
             headers: {

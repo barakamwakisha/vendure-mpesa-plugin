@@ -19,20 +19,15 @@ export class ReversalCallbackController {
 
     @Post()
     async handleCallback(@Body() payload: ReversalCallbackPayload) {
-        const { OriginatorConversationID, TransactionID, ResultType } =
-            payload.Result
+        const { ResultType, ResultDesc, TransactionID } = payload.Result
 
         Logger.info(
-            `Reversal callback received for transaction ${TransactionID}, status: ${ResultType}, originatorConversationID: ${OriginatorConversationID}`,
+            `Reversal callback ${ResultType}: Transaction ${TransactionID} ${ResultDesc}`,
             loggerCtx,
         )
 
         const ctx = await this.createRequestContext()
-        await this.mpesaService.handleReversalCallback(
-            ctx,
-            OriginatorConversationID,
-            ResultType,
-        )
+        await this.mpesaService.handleReversalCallback(ctx, payload)
     }
 
     private async createRequestContext(): Promise<RequestContext> {

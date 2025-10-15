@@ -15,7 +15,17 @@ export const shopApiExtensions = gql`
         paymentState: String
     }
 
+    type MpesaTransactionInitiation {
+        success: Boolean!
+        transactionId: String
+        message: String!
+    }
+
     extend type Mutation {
+        initiateMpesaTransaction(
+            phoneNumber: String!
+        ): MpesaTransactionInitiation!
+
         verifyMpesaTransaction(
             transactionId: String!
         ): MpesaTransactionVerification!
