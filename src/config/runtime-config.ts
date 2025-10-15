@@ -8,6 +8,7 @@ export const configuration: PluginConfigurationFn = config => {
     config.customFields.Order.push({
         name: "mpesaCheckoutRequestID",
         type: "string",
+        nullable: true,
         internal: true,
     })
 
