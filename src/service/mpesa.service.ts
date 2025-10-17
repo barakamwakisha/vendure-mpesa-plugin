@@ -28,7 +28,6 @@ import {
 } from "../constants"
 import {
     MpesaConfig,
-    MpesaPaymentStatus,
     MpesaTransactionInitiation,
     MpesaTransactionVerification,
     ReversalCallbackPayload,
@@ -198,10 +197,9 @@ export class MpesaService {
         const payment = await this.getPaymentByTransactionId(ctx, transactionId)
         if (payment) {
             return {
-                status: MpesaPaymentStatus.SUCCESS,
+                status: "SUCCESS",
                 transactionId,
                 message: "Payment has been successfully completed",
-                paymentState: payment.state,
             }
         }
 
@@ -215,14 +213,14 @@ export class MpesaService {
         if (!order) {
             // The mpesaCheckoutRequestID custom field is set to null when the payment is failed
             return {
-                status: MpesaPaymentStatus.FAILED,
+                status: "FAILED",
                 transactionId,
                 message: "Payment has failed",
             }
         }
 
         return {
-            status: MpesaPaymentStatus.PENDING,
+            status: "PENDING",
             transactionId,
             message: "Payment is still pending",
         }

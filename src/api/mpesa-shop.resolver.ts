@@ -2,8 +2,6 @@ import { Args, Mutation, Resolver } from "@nestjs/graphql"
 import {
     Allow,
     Ctx,
-    CustomerService,
-    OrderService,
     Permission,
     RequestContext,
     UnauthorizedError,
@@ -17,11 +15,7 @@ import {
 
 @Resolver()
 export class MpesaShopResolver {
-    constructor(
-        private readonly mpesaService: MpesaService,
-        private readonly orderService: OrderService,
-        private readonly customerService: CustomerService,
-    ) {}
+    constructor(private readonly mpesaService: MpesaService) {}
 
     @Mutation()
     @Allow(Permission.Owner)

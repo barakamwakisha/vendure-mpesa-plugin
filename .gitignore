@@ -1,31 +1,58 @@
-*.launch
-*.log
-*.sqlite
-*.sublime-workspace
-.DS_Store
-.c9/
-.cache
-.classpath
-.env
-.history
-.idea
-.project
-.sass-cache
-.settings/
-.temp
-.vscode
-Thumbs.db
-__data__
-bazel-out
-chrome-profiler-events*.json
-connect.lock
-coverage
+# compiled output
 dist
-generated/
-lib/
-libpeerconnection.log
-node_modules
-out-tsc
-speed-measure-plugin*.json
 tmp
-typings
+/out-tsc
+
+# dependencies
+node_modules
+
+# yarn
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+__admin-ui/
+__data__
+.swc
+.env
+*.sqlite
+__test_db__
+vite.config.*.timestamp*
+vitest.config.*.timestamp*
+**/**/dev-server/assets
+
+tsconfig.lib.tsbuildinfo

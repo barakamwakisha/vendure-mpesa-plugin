@@ -2,6 +2,12 @@
 import { RefundStates } from "@vendure/core"
 import { CustomOrderFields } from "@vendure/core/dist/entity/custom-entity-fields"
 
+import { ResultOf } from "gql.tada"
+import {
+    InitiateMpesaTransactionDocument,
+    VerifyMpesaTransactionDocument,
+} from "./api/shop-operations"
+
 declare module "@vendure/core/dist/entity/custom-entity-fields" {
     interface CustomOrderFields {
         mpesaCheckoutRequestID: string | null
@@ -83,24 +89,13 @@ export interface ReversalCallbackPayload {
     }
 }
 
-export enum MpesaPaymentStatus {
-    SUCCESS = "SUCCESS",
-    FAILED = "FAILED",
-    PENDING = "PENDING",
-}
+export type MpesaTransactionVerification = ResultOf<
+    typeof VerifyMpesaTransactionDocument
+>["verifyMpesaTransaction"]
 
-export interface MpesaTransactionVerification {
-    status: MpesaPaymentStatus
-    transactionId: string
-    message: string
-    paymentState?: string
-}
-
-export interface MpesaTransactionInitiation {
-    success: boolean
-    transactionId?: string
-    message: string
-}
+export type MpesaTransactionInitiation = ResultOf<
+    typeof InitiateMpesaTransactionDocument
+>["initiateMpesaTransaction"]
 
 /**
  * @description

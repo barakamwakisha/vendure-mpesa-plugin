@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "noEmit": true,
+        "jsx": "react",
+        "lib": ["dom", "dom.iterable", "esnext"],
+        "plugins": [
+            {
+                "name": "gql.tada/ts-plugin",
+                "schema": "http://localhost:3004/admin-api"
+            }
+        ]
+    },
+    "include": ["src/ui/**/*.ts", "src/ui/**/*.tsx"]
+}

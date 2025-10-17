@@ -8,7 +8,7 @@ import {
 
 import { STK_PUSH_CALLBACK_ENDPOINT, loggerCtx } from "../constants"
 import { MpesaService } from "../service/mpesa.service"
-import { STKCallbackPayload } from "../types"
+import { type STKCallbackPayload } from "../types"
 
 @Controller(STK_PUSH_CALLBACK_ENDPOINT)
 export class StkPushCallbackController {

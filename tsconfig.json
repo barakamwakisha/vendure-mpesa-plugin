@@ -1,19 +1,71 @@
 {
+    "files": [],
+    "include": [],
     "compilerOptions": {
-        "lib": ["es2022"],
-        "module": "commonjs",
+        "allowJs": false,
         "allowSyntheticDefaultImports": true,
-        "esModuleInterop": true,
+        "baseUrl": ".",
+        "composite": true,
+        "declaration": true,
+        "declarationMap": false,
+        "emitDeclarationOnly": false,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "target": "es2022",
-        "strict": true,
-        "sourceMap": false,
+        "forceConsistentCasingInFileNames": true,
+        "incremental": true,
+        "isolatedModules": true,
+        "lib": ["es2022"],
+        "module": "NodeNext",
+        "moduleResolution": "node16",
+        "noEmitOnError": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": false,
+        "noUnusedLocals": true,
+        "pretty": true,
+        "removeComments": false,
+        "resolveJsonModule": false,
+        "skipDefaultLibCheck": false,
         "skipLibCheck": true,
-        "types": ["vitest/globals", "node"],
-        "declaration": true,
+        "sourceMap": false,
+        "strict": true,
+        "noUncheckedIndexedAccess": true,
         "strictPropertyInitialization": false,
-        "outDir": "dist"
+        "target": "es2022",
+        "verbatimModuleSyntax": false,
+        "jsx": "react",
+        "plugins": [
+            {
+                "name": "gql.tada/ts-plugin",
+                "schemas": [
+                    {
+                        "name": "shop-api",
+                        "schema": "http://localhost:3000/shop-api",
+                        "tadaOutputLocation": "./src/generated/shop-api.ts"
+                    },
+                    {
+                        "name": "admin-api",
+                        "schema": "http://localhost:3000/admin-api",
+                        "tadaOutputLocation": "./src/generated/admin-api.ts"
+                    },
+                    {
+                        "name": "ui-extensions",
+                        "schema": "http://localhost:3000/admin-api",
+                        "tadaOutputLocation": "./src/ui/gql/introspection.ts"
+                    }
+                ]
+            }
+        ]
     },
-    "include": ["src/"]
+    "references": [
+        {
+            "path": "./tsconfig.lib.json"
+        },
+        {
+            "path": "./tsconfig.spec.json"
+        },
+        {
+            "path": "./tsconfig.ui.json"
+        }
+    ]
 }

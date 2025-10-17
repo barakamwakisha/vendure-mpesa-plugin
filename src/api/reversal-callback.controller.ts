@@ -8,7 +8,7 @@ import {
 
 import { REVERSAL_CALLBACK_ENDPOINT, loggerCtx } from "../constants"
 import { MpesaService } from "../service/mpesa.service"
-import { ReversalCallbackPayload } from "../types"
+import { type ReversalCallbackPayload } from "../types"
 
 @Controller(REVERSAL_CALLBACK_ENDPOINT)
 export class ReversalCallbackController {

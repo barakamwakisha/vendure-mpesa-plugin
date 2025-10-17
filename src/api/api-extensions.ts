@@ -11,7 +11,6 @@ export const shopApiExtensions = gql`
         status: MpesaPaymentStatus!
         transactionId: String!
         message: String!
-        paymentState: String
     }
 
     type MpesaTransactionInitiation {
