@@ -15,7 +15,7 @@ import {
     SetCustomerForOrder,
     SetShippingAddress,
     SetShippingMethod,
-    TransitionToState
+    TransitionToState,
 } from "./operations"
 
 const testCustomer = {
@@ -23,7 +23,7 @@ const testCustomer = {
     firstName: "Dwight",
     lastName: "Schrute",
     phoneNumber: "+1234567890",
-    emailAddress: "dwight.schrute@yopmail.com"
+    emailAddress: "dwight.schrute@yopmail.com",
 }
 
 /**
@@ -41,7 +41,7 @@ export async function setAddressAndShipping(
     shopClient: SimpleGraphQLClient,
     shippingMethodId?: string | number,
     shippingAddress?: VariablesOf<typeof SetShippingAddress>,
-    billingAddress?: VariablesOf<typeof SetBillingAddress>
+    billingAddress?: VariablesOf<typeof SetBillingAddress>,
 ): Promise<void> {
     const finalShippingAddress = shippingAddress ?? {
         input: {
@@ -50,8 +50,8 @@ export async function setAddressAndShipping(
             streetLine2: "Suite 601",
             city: "Alpharetta",
             postalCode: "30005",
-            countryCode: "US"
-        }
+            countryCode: "US",
+        },
     }
 
     await shopClient.query(SetShippingAddress, finalShippingAddress)
@@ -72,8 +72,21 @@ export async function setAddressAndShipping(
     }
 
     await shopClient.query(SetShippingMethod, {
-        ids: [shippingMethodId]
+        ids: [shippingMethodId],
     })
+}
+
+export async function transitionToState(
+    shopClient: SimpleGraphQLClient,
+    state: string,
+): Promise<ResultOf<typeof TransitionToState>["transitionOrderToState"]> {
+    const { transitionOrderToState } = await shopClient.query(
+        TransitionToState,
+        {
+            state,
+        },
+    )
+    return transitionOrderToState
 }
 
 /**
@@ -83,19 +96,19 @@ export async function proceedToArrangingPayment(
     shopClient: SimpleGraphQLClient,
     shippingMethodId?: string | number,
     shippingAddress?: VariablesOf<typeof SetShippingAddress>,
-    billingAddress?: VariablesOf<typeof SetBillingAddress>
+    billingAddress?: VariablesOf<typeof SetBillingAddress>,
 ): Promise<ResultOf<typeof TransitionToState>["transitionOrderToState"]> {
     if (shippingMethodId && shippingAddress) {
         await setAddressAndShipping(
             shopClient,
             shippingMethodId,
             shippingAddress,
-            billingAddress
+            billingAddress,
         )
     }
 
     const result = await shopClient.query(TransitionToState, {
-        state: "ArrangingPayment"
+        state: "ArrangingPayment",
     })
     return result.transitionOrderToState
 }
@@ -105,15 +118,15 @@ export async function proceedToArrangingPayment(
  */
 export async function addPaymentToOrder(
     shopClient: SimpleGraphQLClient,
-    code: string
+    code: string,
 ): Promise<ResultOf<typeof AddPaymentToOrder>["addPaymentToOrder"]> {
     const { addPaymentToOrder } = await shopClient.query(AddPaymentToOrder, {
         input: {
             method: code,
             metadata: {
-                baz: "quux"
-            }
-        }
+                baz: "quux",
+            },
+        },
     })
     return addPaymentToOrder
 }
@@ -125,15 +138,15 @@ export async function addItem(
     shopClient: SimpleGraphQLClient,
     variantId: ID,
     quantity: number,
-    queryParams?: QueryParams
+    queryParams?: QueryParams,
 ) {
     const { addItemToOrder } = await shopClient.query(
         AddItemToOrder,
         {
             productVariantId: variantId,
-            quantity
+            quantity,
         },
-        queryParams
+        queryParams,
     )
 
     return addItemToOrder
@@ -141,10 +154,10 @@ export async function addItem(
 
 export async function applyCouponCode(
     shopClient: SimpleGraphQLClient,
-    couponCode: string
+    couponCode: string,
 ): Promise<ResultOf<typeof ApplyCouponCode>["applyCouponCode"]> {
     const { applyCouponCode } = await shopClient.query(ApplyCouponCode, {
-        couponCode
+        couponCode,
     })
 
     return applyCouponCode
@@ -156,16 +169,16 @@ export async function createSettledOrder(
     authorizeFirst = true,
     variants: Array<{ id: string; quantity: number }> = [
         { id: "T_1", quantity: 1 },
-        { id: "T_2", quantity: 2 }
+        { id: "T_2", quantity: 2 },
     ],
     shippingAddress?: VariablesOf<typeof SetShippingAddress>,
     billingAddress?: VariablesOf<typeof SetBillingAddress>,
-    paymentMethodCode: string = testPaymentMethod.code
+    paymentMethodCode: string = testPaymentMethod.code,
 ): Promise<SettledOrder> {
     if (authorizeFirst) {
         await shopClient.asUserWithCredentials(
             "hayden.zieme12@hotmail.com",
-            "test"
+            "test",
         )
     }
     for (const v of variants) {
@@ -180,15 +193,15 @@ export async function createSettledOrder(
                 streetLine2: "12a",
                 city: "Liwwa",
                 postalCode: "8923CP",
-                countryCode: "NL"
-            }
+                countryCode: "NL",
+            },
         }
     }
     const res = await proceedToArrangingPayment(
         shopClient,
         shippingMethodId,
         orderShippingAddress,
-        billingAddress
+        billingAddress,
     )
     if ((res as ErrorResult)?.errorCode) {
         console.error(JSON.stringify(res))
@@ -197,14 +210,14 @@ export async function createSettledOrder(
     const order = await addPaymentToOrder(shopClient, paymentMethodCode)
     if ((order as ErrorResult).errorCode) {
         throw new Error(
-            `Failed to create settled order: ${(order as ErrorResult).message}`
+            `Failed to create settled order: ${(order as ErrorResult).message}`,
         )
     }
     return order as SettledOrder
 }
 
 export async function getActiveChannel(
-    shopClient: SimpleGraphQLClient
+    shopClient: SimpleGraphQLClient,
 ): Promise<ResultOf<typeof GetActiveChannel>["activeChannel"]> {
     const { activeChannel } = await shopClient.query(GetActiveChannel)
     return activeChannel
@@ -215,16 +228,16 @@ export async function getActiveChannel(
  */
 export async function setCustomerForOrder(
     shopClient: SimpleGraphQLClient,
-    customer?: Customer
+    customer?: Customer,
 ) {
     const finalCustomer = customer ?? testCustomer
     const { setCustomerForOrder } = await shopClient.query(
         SetCustomerForOrder,
         {
             input: {
-                ...finalCustomer
-            }
-        }
+                ...finalCustomer,
+            },
+        },
     )
 
     return setCustomerForOrder
@@ -238,20 +251,20 @@ export async function getActiveOrder(shopClient: SimpleGraphQLClient) {
 export async function getProduct(
     shopClient: SimpleGraphQLClient,
     id?: ID,
-    slug?: string
+    slug?: string,
 ) {
     const { product } = await shopClient.query(GetProduct, {
         id,
-        slug
+        slug,
     })
     return product
 }
 
 export async function getEligibleShippingMethods(
-    shopClient: SimpleGraphQLClient
+    shopClient: SimpleGraphQLClient,
 ) {
     const { eligibleShippingMethods } = await shopClient.query(
-        GetEligibleShippingMethods
+        GetEligibleShippingMethods,
     )
     return eligibleShippingMethods
 }

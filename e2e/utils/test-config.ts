@@ -14,12 +14,12 @@ export const TEST_SETUP_TIMEOUT_MS = process.env.E2E_DEBUG
 export const testConfig = (port: number) => {
     return mergeConfig(defaultTestConfig, {
         apiOptions: {
-            port
+            port,
         },
         entityOptions: {
-            entityIdStrategy: new UuidIdStrategy()
+            entityIdStrategy: new UuidIdStrategy(),
         },
-        dbConnectionOptions: getDbConfig()
+        dbConnectionOptions: getDbConfig(),
     })
 }
 
@@ -33,7 +33,7 @@ function getDbConfig(): DataSourceOptions {
                 host: "127.0.0.1",
                 port: 5432,
                 username: process.env.DB_USER ?? "admin",
-                password: process.env.DB_PASSWORD ?? "secret"
+                password: process.env.DB_PASSWORD ?? "secret",
             }
         case "mariadb":
             return {
@@ -42,7 +42,7 @@ function getDbConfig(): DataSourceOptions {
                 host: "127.0.0.1",
                 port: 3306,
                 username: process.env.DB_USER ?? "admin",
-                password: process.env.DB_PASSWORD ?? "secret"
+                password: process.env.DB_PASSWORD ?? "secret",
             }
         case "mysql":
             return {
@@ -51,7 +51,7 @@ function getDbConfig(): DataSourceOptions {
                 host: "127.0.0.1",
                 port: 3306,
                 username: process.env.DB_USER ?? "admin",
-                password: process.env.DB_PASSWORD ?? "secret"
+                password: process.env.DB_PASSWORD ?? "secret",
             }
         case "sqljs":
         default:

@@ -77,7 +77,7 @@ export const AddItemToOrder = graphql(
             }
         }
     `,
-    [OrderFragment]
+    [OrderFragment],
 )
 
 export const ApplyCouponCode = graphql(
@@ -94,7 +94,7 @@ export const ApplyCouponCode = graphql(
             }
         }
     `,
-    [OrderFragment]
+    [OrderFragment],
 )
 
 export const SetShippingAddress = graphql(
@@ -107,7 +107,7 @@ export const SetShippingAddress = graphql(
             }
         }
     `,
-    [OrderFragment]
+    [OrderFragment],
 )
 
 export const SetBillingAddress = graphql(
@@ -120,7 +120,7 @@ export const SetBillingAddress = graphql(
             }
         }
     `,
-    [OrderFragment]
+    [OrderFragment],
 )
 
 export const SetShippingMethod = graphql(`
@@ -160,7 +160,7 @@ export const AddPaymentToOrder = graphql(
             }
         }
     `,
-    [OrderFragment]
+    [OrderFragment],
 )
 
 export const GetActiveChannel = graphql(`
@@ -186,7 +186,7 @@ export const SetCustomerForOrder = graphql(
             }
         }
     `,
-    [OrderFragment]
+    [OrderFragment],
 )
 
 export const GetActiveOrder = graphql(
@@ -197,7 +197,7 @@ export const GetActiveOrder = graphql(
             }
         }
     `,
-    [OrderFragment]
+    [OrderFragment],
 )
 export type ActiveOrder = NonNullable<
     ResultOf<typeof GetActiveOrder>["activeOrder"]
@@ -212,6 +212,22 @@ export const GetProduct = graphql(`
                 id
                 name
                 priceWithTax
+            }
+        }
+    }
+`)
+
+export const GetProducts = graphql(`
+    query GetProucts($options: ProductListOptions) {
+        products(options: $options) {
+            items {
+                id
+                name
+                variants {
+                    id
+                    name
+                    priceWithTax
+                }
             }
         }
     }

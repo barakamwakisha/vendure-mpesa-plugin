@@ -61,24 +61,39 @@ export class MpesaService {
             undefined,
         )
         if (!sessionOrder) {
-            throw new UserInputError("No active order found for session")
+            return {
+                success: false,
+                transactionId: "",
+                message: "No active order found for session",
+            }
         }
 
         const order = await this.orderService.findOne(ctx, sessionOrder.id, [
             "customer",
         ])
         if (!order) {
-            // This should never happen
-            throw new UserInputError("No order found for active session")
+            return {
+                success: false,
+                transactionId: "",
+                message: "No order found for active session",
+            }
         }
 
         const { totalWithTax, customer, currencyCode, code } = order
         if (!customer) {
-            throw new UserInputError("No customer found for active order")
+            return {
+                success: false,
+                transactionId: "",
+                message: "No customer found for active order",
+            }
         }
 
         if (currencyCode !== CurrencyCode.KES) {
-            throw new UserInputError("Mpesa only supports KES currency")
+            return {
+                success: false,
+                transactionId: "",
+                message: "Mpesa only supports KES currency",
+            }
         }
 
         try {

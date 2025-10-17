@@ -78,3 +78,38 @@ export const CreatePaymentMethod = graphql(`
         }
     }
 `)
+
+export const UpdateOrder = graphql(`
+    mutation UpdateOrder($id: ID!, $input: UpdateOrderInput!) {
+        updateOrder(id: $id, input: $input) {
+            id
+        }
+    }
+`)
+
+export const AddManualPaymentToOrder = graphql(`
+    mutation AddManualPaymentToOrder($input: ManualPaymentInput!) {
+        addManualPaymentToOrder(input: $input) {
+            __typename
+            ... on Order {
+                id
+            }
+            ... on ErrorResult {
+                errorCode
+                message
+            }
+        }
+    }
+`)
+
+export const CreateRefund = graphql(`
+    mutation CreateRefund($input: CreateRefundInput!) {
+        createRefund(input: $input) {
+            ... on Refund {
+                id
+                state
+                transactionId
+            }
+        }
+    }
+`)
