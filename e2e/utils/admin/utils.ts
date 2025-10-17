@@ -8,36 +8,11 @@ import { ResultOf, VariablesOf } from "gql.tada"
 
 import {
     AddManualPaymentToOrder,
-    CreateCustomer,
     CreatePaymentMethod,
     CreateShippingMethod,
-    GetCustomerList,
+    SetOrderCustomFields,
     UpdateChannel,
 } from "./operations"
-
-export async function createCustomer(
-    adminClient: SimpleGraphQLClient,
-    input: VariablesOf<typeof CreateCustomer>["input"],
-    password?: string,
-) {
-    await adminClient.asSuperAdmin()
-    const { createCustomer } = await adminClient.query(CreateCustomer, {
-        input,
-        password,
-    })
-    return createCustomer
-}
-export type Customer = Extract<
-    ResultOf<typeof CreateCustomer>["createCustomer"],
-    { __typename: "Customer" }
->
-
-export async function getCustomerList(
-    adminClient: SimpleGraphQLClient,
-    options?: VariablesOf<typeof GetCustomerList>["options"],
-) {
-    return adminClient.query(GetCustomerList, { options })
-}
 
 export async function updateChannel(
     adminClient: SimpleGraphQLClient,
@@ -117,4 +92,16 @@ export async function addManualPaymentToOrder(
         { input },
     )
     return addManualPaymentToOrder
+}
+
+export async function setOrderCustomFields(
+    adminClient: SimpleGraphQLClient,
+    input: VariablesOf<typeof SetOrderCustomFields>["input"],
+) {
+    await adminClient.asSuperAdmin()
+    const { setOrderCustomFields } = await adminClient.query(
+        SetOrderCustomFields,
+        { input },
+    )
+    return setOrderCustomFields
 }
