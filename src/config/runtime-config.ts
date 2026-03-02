@@ -1,6 +1,5 @@
 import { PluginConfigurationFn } from "@vendure/core"
 
-import { asyncRefundProcess } from "./async-refund-process"
 import { mpesaPaymentMethodHandler } from "./mpesa.handler"
 
 export const configuration: PluginConfigurationFn = config => {
@@ -12,8 +11,6 @@ export const configuration: PluginConfigurationFn = config => {
         nullable: true,
         internal: true,
     })
-
-    config.paymentOptions.refundProcess?.push(asyncRefundProcess)
 
     return config
 }

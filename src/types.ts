@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { RefundStates } from "@vendure/core"
 import { CustomOrderFields } from "@vendure/core/dist/entity/custom-entity-fields"
 
 import { ResultOf } from "gql.tada"
@@ -11,12 +10,6 @@ import {
 declare module "@vendure/core/dist/entity/custom-entity-fields" {
     interface CustomOrderFields {
         mpesaCheckoutRequestID: string | null
-    }
-}
-
-declare module "@vendure/core" {
-    interface RefundStates {
-        Created: never
     }
 }
 
@@ -68,7 +61,7 @@ export interface ReversalResponse {
 
 export interface ReversalCallbackPayload {
     Result: {
-        ResultType: 0 | 1
+        ResultType: 0
         ResultCode: string
         ResultDesc: string
         OriginatorConversationID: string

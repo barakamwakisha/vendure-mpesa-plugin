@@ -14,7 +14,6 @@ import {
     Refund,
     RequestContext,
     TransactionalConnection,
-    UserInputError,
 } from "@vendure/core"
 import axios, { AxiosError, AxiosInstance } from "axios"
 
@@ -372,13 +371,18 @@ export class MpesaService {
                     ResultURL: `${config.vendureHost}/${REVERSAL_CALLBACK_ENDPOINT}`,
                     TransactionID: payment.metadata.mpesaReceiptNumber,
                     Amount: Math.trunc(payment.amount / 100),
-                    Occasion: reason,
                 },
             )
 
-            // TODO: Investigate refund state transition error. Reversal is still processed
+            if (data.ResponseCode !== "0") {
+                return {
+                    state: "Failed",
+                    transactionId: payment.metadata.mpesaReceiptNumber,
+                }
+            }
+
             return {
-                state: "Created",
+                state: "Pending",
                 transactionId: payment.metadata.mpesaReceiptNumber,
                 metadata: {
                     conversationID: data.OriginatorConversationID,
@@ -406,7 +410,7 @@ export class MpesaService {
         ctx: RequestContext,
         payload: ReversalCallbackPayload,
     ) {
-        const { ResultType, ResultDesc, TransactionID } = payload.Result
+        const { ResultCode, ResultDesc, TransactionID } = payload.Result
 
         const refund = await this.connection
             .getRepository(ctx, Refund)
@@ -422,7 +426,7 @@ export class MpesaService {
             return
         }
 
-        if (ResultType === 0) {
+        if (ResultCode === "0") {
             await this.orderService.settleRefund(ctx, {
                 id: refund.id,
                 transactionId: TransactionID,
