@@ -56,3 +56,5 @@ vitest.config.*.timestamp*
 **/**/dev-server/assets
 
 tsconfig.lib.tsbuildinfo
+
+.cursor/*.log

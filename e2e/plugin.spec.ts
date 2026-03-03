@@ -445,8 +445,6 @@ describe("Mpesa Plugin", function () {
     })
 
     describe("Payment reversal", () => {
-        const RECEIPT_ID = "RCP_REVERSAL_TEST"
-
         function reversalCallbackPayload(opts: {
             transactionId: string
             resultCode: string
@@ -467,6 +465,7 @@ describe("Mpesa Plugin", function () {
         }
 
         it("calls reversal API and creates refund in Validating state", async () => {
+            const RECEIPT_ID = `RCP_REVERSAL_TEST_${Date.now()}`
             await setupCompleteOrder()
             const { activeOrder } = await shopClient.query(GetActiveOrder)
             const orderId = String(activeOrder!.id)
@@ -503,6 +502,7 @@ describe("Mpesa Plugin", function () {
         })
 
         it("callback with ResultCode 0 marks refund Settled", async () => {
+            const RECEIPT_ID = `RCP_REVERSAL_TEST_${Date.now()}`
             await setupCompleteOrder()
             const { activeOrder } = await shopClient.query(GetActiveOrder)
             const orderId = String(activeOrder!.id)
@@ -541,12 +541,12 @@ describe("Mpesa Plugin", function () {
                     ).refunds ?? [],
             )
 
-            console.log(JSON.stringify(refunds, null, 2))
             const refund = refunds.find(r => r.transactionId === RECEIPT_ID)
             expect(refund?.state).toBe("Settled")
         })
 
         it("callback with non-zero ResultCode marks refund as Failed", async () => {
+            const RECEIPT_ID = `RCP_REVERSAL_TEST_${Date.now()}`
             await setupCompleteOrder()
             const { activeOrder } = await shopClient.query(GetActiveOrder)
             const orderId = String(activeOrder!.id)
@@ -589,6 +589,7 @@ describe("Mpesa Plugin", function () {
         })
 
         it("reversal API failure marks refund as Failed", async () => {
+            const RECEIPT_ID = `RCP_REVERSAL_TEST_${Date.now()}`
             await setupCompleteOrder()
             const { activeOrder } = await shopClient.query(GetActiveOrder)
             const orderId = String(activeOrder!.id)
@@ -629,6 +630,7 @@ describe("Mpesa Plugin", function () {
         })
 
         it("callback for unknown TransactionID does not throw", async () => {
+            const RECEIPT_ID = `RCP_REVERSAL_TEST_${Date.now()}`
             await setupCompleteOrder()
             const { activeOrder } = await shopClient.query(GetActiveOrder)
             const orderId = String(activeOrder!.id)
