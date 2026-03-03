@@ -305,7 +305,7 @@ export class MpesaService {
                 }
             }
 
-            const mpesaReceiptNumber =
+            const MpesaReceiptNumber =
                 CallbackMetadata?.Item?.find(
                     item => item.Name === "MpesaReceiptNumber",
                 )?.Value ?? "N/A"
@@ -315,7 +315,7 @@ export class MpesaService {
                     method: mpesaPaymentMethodHandler.code,
                     metadata: {
                         CheckoutRequestID,
-                        MpesaReceiptNumber: mpesaReceiptNumber,
+                        MpesaReceiptNumber,
                     },
                 })
 
@@ -328,7 +328,7 @@ export class MpesaService {
             }
 
             Logger.info(
-                `Mpesa Payment ${mpesaReceiptNumber} added to order ${order.code}`,
+                `Mpesa Payment ${MpesaReceiptNumber} added to order ${order.code}`,
                 loggerCtx,
             )
         })
@@ -369,7 +369,7 @@ export class MpesaService {
                     SecurityCredential: this.getSecurityCredential(config),
                     QueueTimeOutURL: `${config.vendureHost}/${REVERSAL_CALLBACK_ENDPOINT}`,
                     ResultURL: `${config.vendureHost}/${REVERSAL_CALLBACK_ENDPOINT}`,
-                    TransactionID: payment.metadata.mpesaReceiptNumber,
+                    TransactionID: payment.metadata.MpesaReceiptNumber,
                     Amount: Math.trunc(payment.amount / 100),
                 },
             )
@@ -377,13 +377,13 @@ export class MpesaService {
             if (data.ResponseCode !== "0") {
                 return {
                     state: "Failed",
-                    transactionId: payment.metadata.mpesaReceiptNumber,
+                    transactionId: payment.metadata.MpesaReceiptNumber,
                 }
             }
 
             return {
-                state: "Pending",
-                transactionId: payment.metadata.mpesaReceiptNumber,
+                state: "Validating",
+                transactionId: payment.metadata.MpesaReceiptNumber,
                 metadata: {
                     conversationID: data.OriginatorConversationID,
                 },
@@ -401,7 +401,7 @@ export class MpesaService {
             }
             return {
                 state: "Failed",
-                transactionId: payment.metadata.mpesaReceiptNumber,
+                transactionId: payment.metadata.MpesaReceiptNumber,
             }
         }
     }

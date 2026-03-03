@@ -556,9 +556,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/server@npm:^4.11.3":
-  version: 4.12.2
-  resolution: "@apollo/server@npm:4.12.2"
+"@apollo/server@npm:^4.12.2":
+  version: 4.13.0
+  resolution: "@apollo/server@npm:4.13.0"
   dependencies:
     "@apollo/cache-control-types": "npm:^1.0.3"
     "@apollo/server-gateway-interface": "npm:^1.1.1"
@@ -575,6 +575,7 @@ __metadata:
     "@types/express-serve-static-core": "npm:^4.17.30"
     "@types/node-fetch": "npm:^2.6.1"
     async-retry: "npm:^1.2.1"
+    content-type: "npm:^1.0.5"
     cors: "npm:^2.8.5"
     express: "npm:^4.21.1"
     loglevel: "npm:^1.6.8"
@@ -586,7 +587,7 @@ __metadata:
     whatwg-mimetype: "npm:^3.0.0"
   peerDependencies:
     graphql: ^16.6.0
-  checksum: 10c0/c5ac01490adcc1f36787f6be2e0c698a3d7ffe9846bd6f70c18d788c5c60b528fc0f2d037ed5ac4a2ddf4d24e72335371e3e1bfc16c094cbb3e034b883ebffd4
+  checksum: 10c0/c88d6a495580b77447a3f19e37b9cbd8cd131a6aab5a844aa05bef6228a26c0e095247006dbf5ed688ed0a9eb034e4c91a6b45ac081fdc77e367982c0e5867d2
   languageName: node
   linkType: hard
 
@@ -6393,20 +6394,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vendure/admin-ui-plugin@npm:^3.4.4":
-  version: 3.4.4
-  resolution: "@vendure/admin-ui-plugin@npm:3.4.4"
+"@vendure/admin-ui-plugin@npm:^3.5.5":
+  version: 3.5.5
+  resolution: "@vendure/admin-ui-plugin@npm:3.5.5"
   dependencies:
     date-fns: "npm:^4.0.0"
     express-rate-limit: "npm:^7.5.0"
     fs-extra: "npm:^11.2.0"
-  checksum: 10c0/aaf882d2824e98349ed9801fd29530779ce6ebcce233cc79e975edcb14d88bae9aca5b5a46b291927acfe2031515fb9e0a2a7220ca2ae0efc1d55439cf4f1c96
+  checksum: 10c0/5cf8d252d9bf4e06acce867c0fd5342bb0440e8900765dc496b10f4bd5cc2dd71793f26a5d4c7bf58b8c31db787d5b880a5b61df896e16df58c2ae1ad9d5cf2d
   languageName: node
   linkType: hard
 
-"@vendure/admin-ui@npm:3.4.4":
-  version: 3.4.4
-  resolution: "@vendure/admin-ui@npm:3.4.4"
+"@vendure/admin-ui@npm:3.5.5":
+  version: 3.5.5
+  resolution: "@vendure/admin-ui@npm:3.5.5"
   dependencies:
     "@angular/animations": "npm:^19.2.4"
     "@angular/cdk": "npm:^19.2.7"
@@ -6428,14 +6429,14 @@ __metadata:
     "@ng-select/ng-select": "npm:^14.2.6"
     "@ngx-translate/core": "npm:^16.0.4"
     "@ngx-translate/http-loader": "npm:^16.0.1"
-    "@vendure/common": "npm:3.4.4"
+    "@vendure/common": "npm:3.5.5"
     "@webcomponents/custom-elements": "npm:^1.6.0"
     apollo-angular: "npm:^10.0.3"
     apollo-upload-client: "npm:^18.0.1"
     chartist: "npm:^1.3.0"
     codejar: "npm:^4.2.0"
     dayjs: "npm:^1.11.10"
-    graphql: "npm:^16.10.0"
+    graphql: "npm:^16.11.0"
     just-extend: "npm:^6.2.0"
     messageformat: "npm:2.3.0"
     ngx-pagination: "npm:^6.0.3"
@@ -6454,35 +6455,35 @@ __metadata:
     react: "npm:^19.0.0"
     react-dom: "npm:^19.0.0"
     rxjs: "npm:^7.8.1"
-    tslib: "npm:^2.6.2"
+    tslib: "npm:^2.8.1"
     zone.js: "npm:~0.15.0"
-  checksum: 10c0/969786eb1af5915c74e17e8accd1f574dab77618d64e91e462fdbeb3150ee063373c6297541a6344c0f0fc24e0be2c2b07fcb3bd0f4e86991fee3c26fb963b15
+  checksum: 10c0/efcf355d4181c88dff181526f518e1ac3a6547cff6b661c85a9a267348bbbcc0288107d0428f27110e05c25623e7ab41c6a8340f38de46167ed57fbee9986c45
   languageName: node
   linkType: hard
 
-"@vendure/asset-server-plugin@npm:^3.4.4":
-  version: 3.4.4
-  resolution: "@vendure/asset-server-plugin@npm:3.4.4"
+"@vendure/asset-server-plugin@npm:^3.5.5":
+  version: 3.5.5
+  resolution: "@vendure/asset-server-plugin@npm:3.5.5"
   dependencies:
     file-type: "npm:^19.0.0"
     fs-extra: "npm:^11.2.0"
     sharp: "npm:~0.33.5"
-  checksum: 10c0/59cdbd6b75b46942b385a5edd6c3abbfd30fd0b6946bd68da7685f1f185237054ca3bdac6f835712ef8c952b34863998ebd43d160f6cdf13b32fa4c63ac92df4
+  checksum: 10c0/e57e161fa0c76447f7f51765194f7132e266c59dd149b8f5156c5a612e733c98279899549199d7f3f8a54fb4e39ba2a4634c2a17fa6240d921ff97a96ffe391b
   languageName: node
   linkType: hard
 
-"@vendure/common@npm:3.4.4":
-  version: 3.4.4
-  resolution: "@vendure/common@npm:3.4.4"
-  checksum: 10c0/d123f97af8c65e8d36f0e31e44da9de13556cfac94651adf4acb29a3f7087797818b0cabc66cc966631d77052a14505c9987f88261ff90ab967c405e5ec1a0cf
+"@vendure/common@npm:3.5.5":
+  version: 3.5.5
+  resolution: "@vendure/common@npm:3.5.5"
+  checksum: 10c0/edb59a1f1b387f44c35293b81866b877f8e2c7fc30224803fd37e6eb7444efc63aa7560f5a8227b7403ed9a68a19e932f5a0de6b6ba2b1730010ce1ee111e810
   languageName: node
   linkType: hard
 
-"@vendure/core@npm:^3.4.4":
-  version: 3.4.4
-  resolution: "@vendure/core@npm:3.4.4"
+"@vendure/core@npm:^3.5.5":
+  version: 3.5.5
+  resolution: "@vendure/core@npm:3.5.5"
   dependencies:
-    "@apollo/server": "npm:^4.11.3"
+    "@apollo/server": "npm:^4.12.2"
     "@graphql-tools/stitch": "npm:^9.4.5"
     "@nestjs/apollo": "npm:~13.1.0"
     "@nestjs/common": "npm:^11.0.12"
@@ -6491,7 +6492,7 @@ __metadata:
     "@nestjs/platform-express": "npm:^11.0.12"
     "@nestjs/terminus": "npm:^11.0.0"
     "@nestjs/typeorm": "npm:^11.0.0"
-    "@vendure/common": "npm:3.4.4"
+    "@vendure/common": "npm:3.5.5"
     bcrypt: "npm:^5.1.1"
     body-parser: "npm:^1.20.2"
     cookie-session: "npm:^2.1.0"
@@ -6501,9 +6502,9 @@ __metadata:
     csv-parse: "npm:^5.6.0"
     express: "npm:^5.1.0"
     fs-extra: "npm:^11.2.0"
-    graphql: "npm:^16.10.0"
+    graphql: "npm:^16.11.0"
     graphql-fields: "npm:^2.0.3"
-    graphql-scalars: "npm:^1.24.0"
+    graphql-scalars: "npm:^1.24.2"
     graphql-tag: "npm:^2.12.6"
     graphql-upload: "npm:^17.0.0"
     http-proxy-middleware: "npm:^3.0.3"
@@ -6527,42 +6528,42 @@ __metadata:
   peerDependenciesMeta:
     ioredis:
       optional: true
-  checksum: 10c0/49daa316b29fa7d30b9f54af5276836326774133151fa855ed83e5cb0eea3aff82b9ea030c90639e090725e401d14f064e80173007f8e6b489d60326b88a45be
+  checksum: 10c0/11ddb32c59b70f50aa83739fb4a7ca03fdd825d29abbbdf0a78cb739366eeb3582fa6be80a573ecc2665aae5c8579bde668e4631836cafa3291cdc3c25960c78
   languageName: node
   linkType: hard
 
-"@vendure/testing@npm:^3.4.4":
-  version: 3.4.4
-  resolution: "@vendure/testing@npm:3.4.4"
+"@vendure/testing@npm:^3.5.5":
+  version: 3.5.5
+  resolution: "@vendure/testing@npm:3.5.5"
   dependencies:
     "@graphql-typed-document-node/core": "npm:^3.2.0"
-    "@vendure/common": "npm:3.4.4"
+    "@vendure/common": "npm:3.5.5"
     faker: "npm:^4.1.0"
     form-data: "npm:^4.0.0"
-    graphql: "npm:^16.10.0"
+    graphql: "npm:^16.11.0"
     graphql-tag: "npm:^2.12.6"
     node-fetch: "npm:^2.7.0"
     sql.js: "npm:1.13.0"
-  checksum: 10c0/a651416365fba9b6647e06dea183d54cc05d387b9fd680026f44af3b54f62631143040975801dd16d79d94ef88b05e5da6c78e60908978b1154e9340952af7f6
+  checksum: 10c0/f1fdfec8929466b23f6c1c0064cf0e703b601624ed3e04d74beb6eab1d27ce0ec014163462f757b2d2119e90b35fe14cc3e57432df7f94a6fdfb35a9c45e3c2e
   languageName: node
   linkType: hard
 
-"@vendure/ui-devkit@npm:^3.4.4":
-  version: 3.4.4
-  resolution: "@vendure/ui-devkit@npm:3.4.4"
+"@vendure/ui-devkit@npm:^3.5.5":
+  version: 3.5.5
+  resolution: "@vendure/ui-devkit@npm:3.5.5"
   dependencies:
     "@angular-devkit/build-angular": "npm:^19.2.5"
     "@angular/cli": "npm:^19.2.5"
     "@angular/compiler": "npm:^19.2.4"
     "@angular/compiler-cli": "npm:^19.2.4"
-    "@vendure/admin-ui": "npm:3.4.4"
-    "@vendure/common": "npm:3.4.4"
+    "@vendure/admin-ui": "npm:3.5.5"
+    "@vendure/common": "npm:3.5.5"
     chalk: "npm:^4.1.0"
     chokidar: "npm:^3.6.0"
     fs-extra: "npm:^11.2.0"
     glob: "npm:^9.2.1"
     rxjs: "npm:^7.8.1"
-  checksum: 10c0/7396622d47ee6d7f9774ef67391e66bf473e363903763b6fa9c22312775963aaeaab247ab93ccb7948ba16acf085bb6a0d94666a6ca09ab21c4c4ced128e3314
+  checksum: 10c0/2d1d3104e79cc24635255a790cbc189658cc0b8a63664c3460f3e8ee1396952f1dd0134aaf0cf0e7dc86dcebbb2e9c60f0dbaa937b82a131654355a16a4550d8
   languageName: node
   linkType: hard
 
@@ -11074,14 +11075,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-scalars@npm:^1.24.0":
-  version: 1.24.2
-  resolution: "graphql-scalars@npm:1.24.2"
+"graphql-scalars@npm:^1.24.2":
+  version: 1.25.0
+  resolution: "graphql-scalars@npm:1.25.0"
   dependencies:
     tslib: "npm:^2.5.0"
   peerDependencies:
     graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/1d207da58ce0ad29de70cd579372c112de4eeff051eba7ba90efc031c05d4967dfcba89760545a9621f4d4eb74b0355e49ac946ef491d7816874eeaf88fc6472
+  checksum: 10c0/ae7151171dcd4230f4b3d3dff94e29315d2a8ab903a81f9a9f5820974a854373f877ef10d779839c437f29d4e5ef7b13e9b9e0e7f947004fda39c9e72422736a
   languageName: node
   linkType: hard
 
@@ -11139,10 +11140,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql@npm:^15.5.0 || ^16.0.0 || ^17.0.0, graphql@npm:^16.10.0":
+"graphql@npm:^15.5.0 || ^16.0.0 || ^17.0.0":
   version: 16.11.0
   resolution: "graphql@npm:16.11.0"
   checksum: 10c0/124da7860a2292e9acf2fed0c71fc0f6a9b9ca865d390d112bdd563c1f474357141501c12891f4164fe984315764736ad67f705219c62f7580681d431a85db88
+  languageName: node
+  linkType: hard
+
+"graphql@npm:^16.11.0":
+  version: 16.13.0
+  resolution: "graphql@npm:16.13.0"
+  checksum: 10c0/c20e7909c6c8d405a30f8caeae5aaf604b9f949bdcdf80bdb3d3561123e6099181c39eae697cf4fcdc5dd301ab215363b8def0aa0ff51f03cc7e4b48a8c2c2b1
   languageName: node
   linkType: hard
 
@@ -18352,11 +18360,11 @@ __metadata:
     "@types/node": "npm:^24.7.2"
     "@typescript-eslint/eslint-plugin": "npm:^6.21.0"
     "@typescript-eslint/parser": "npm:^6.21.0"
-    "@vendure/admin-ui-plugin": "npm:^3.4.4"
-    "@vendure/asset-server-plugin": "npm:^3.4.4"
-    "@vendure/core": "npm:^3.4.4"
-    "@vendure/testing": "npm:^3.4.4"
-    "@vendure/ui-devkit": "npm:^3.4.4"
+    "@vendure/admin-ui-plugin": "npm:^3.5.5"
+    "@vendure/asset-server-plugin": "npm:^3.5.5"
+    "@vendure/core": "npm:^3.5.5"
+    "@vendure/testing": "npm:^3.5.5"
+    "@vendure/ui-devkit": "npm:^3.5.5"
     axios: "npm:^1.6.7"
     better-sqlite3: "npm:^12.4.1"
     copyfiles: "npm:^2.4.1"

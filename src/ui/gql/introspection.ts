@@ -3201,6 +3201,18 @@ const introspection = {
             "isDeprecated": false
           },
           {
+            "name": "productVariantCount",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int"
+              }
+            },
+            "args": [],
+            "isDeprecated": false
+          },
+          {
             "name": "productVariants",
             "type": {
               "kind": "NON_NULL",
@@ -3392,6 +3404,13 @@ const introspection = {
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "IDOperators"
+            }
+          },
+          {
+            "name": "productVariantCount",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "NumberOperators"
             }
           },
           {
@@ -3600,6 +3619,13 @@ const introspection = {
           },
           {
             "name": "parentId",
+            "type": {
+              "kind": "ENUM",
+              "name": "SortOrder"
+            }
+          },
+          {
+            "name": "productVariantCount",
             "type": {
               "kind": "ENUM",
               "name": "SortOrder"
@@ -22366,6 +22392,10 @@ const introspection = {
           },
           {
             "kind": "OBJECT",
+            "name": "ProductOptionList"
+          },
+          {
+            "kind": "OBJECT",
             "name": "ProductVariantList"
           },
           {
@@ -24365,6 +24395,88 @@ const introspection = {
         ]
       },
       {
+        "kind": "INPUT_OBJECT",
+        "name": "ProductOptionFilterParameter",
+        "inputFields": [
+          {
+            "name": "id",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "IDOperators"
+            }
+          },
+          {
+            "name": "createdAt",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "DateOperators"
+            }
+          },
+          {
+            "name": "updatedAt",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "DateOperators"
+            }
+          },
+          {
+            "name": "languageCode",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "StringOperators"
+            }
+          },
+          {
+            "name": "code",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "StringOperators"
+            }
+          },
+          {
+            "name": "name",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "StringOperators"
+            }
+          },
+          {
+            "name": "groupId",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "IDOperators"
+            }
+          },
+          {
+            "name": "_and",
+            "type": {
+              "kind": "LIST",
+              "ofType": {
+                "kind": "NON_NULL",
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "ProductOptionFilterParameter"
+                }
+              }
+            }
+          },
+          {
+            "name": "_or",
+            "type": {
+              "kind": "LIST",
+              "ofType": {
+                "kind": "NON_NULL",
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "ProductOptionFilterParameter"
+                }
+              }
+            }
+          }
+        ],
+        "isOneOf": false
+      },
+      {
         "kind": "OBJECT",
         "name": "ProductOptionGroup",
         "fields": [
@@ -24657,6 +24769,139 @@ const introspection = {
             "name": "ErrorResult"
           }
         ]
+      },
+      {
+        "kind": "OBJECT",
+        "name": "ProductOptionList",
+        "fields": [
+          {
+            "name": "items",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "LIST",
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "ProductOption"
+                  }
+                }
+              }
+            },
+            "args": [],
+            "isDeprecated": false
+          },
+          {
+            "name": "totalItems",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int"
+              }
+            },
+            "args": [],
+            "isDeprecated": false
+          }
+        ],
+        "interfaces": [
+          {
+            "kind": "INTERFACE",
+            "name": "PaginatedList"
+          }
+        ]
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "ProductOptionListOptions",
+        "inputFields": [
+          {
+            "name": "skip",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          },
+          {
+            "name": "take",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          },
+          {
+            "name": "sort",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "ProductOptionSortParameter"
+            }
+          },
+          {
+            "name": "filter",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "ProductOptionFilterParameter"
+            }
+          },
+          {
+            "name": "filterOperator",
+            "type": {
+              "kind": "ENUM",
+              "name": "LogicalOperator"
+            }
+          }
+        ],
+        "isOneOf": false
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "ProductOptionSortParameter",
+        "inputFields": [
+          {
+            "name": "id",
+            "type": {
+              "kind": "ENUM",
+              "name": "SortOrder"
+            }
+          },
+          {
+            "name": "createdAt",
+            "type": {
+              "kind": "ENUM",
+              "name": "SortOrder"
+            }
+          },
+          {
+            "name": "updatedAt",
+            "type": {
+              "kind": "ENUM",
+              "name": "SortOrder"
+            }
+          },
+          {
+            "name": "code",
+            "type": {
+              "kind": "ENUM",
+              "name": "SortOrder"
+            }
+          },
+          {
+            "name": "name",
+            "type": {
+              "kind": "ENUM",
+              "name": "SortOrder"
+            }
+          },
+          {
+            "name": "groupId",
+            "type": {
+              "kind": "ENUM",
+              "name": "SortOrder"
+            }
+          }
+        ],
+        "isOneOf": false
       },
       {
         "kind": "OBJECT",
@@ -27777,6 +28022,26 @@ const introspection = {
             "isDeprecated": false
           },
           {
+            "name": "productOption",
+            "type": {
+              "kind": "OBJECT",
+              "name": "ProductOption"
+            },
+            "args": [
+              {
+                "name": "id",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "ID"
+                  }
+                }
+              }
+            ],
+            "isDeprecated": false
+          },
+          {
             "name": "productOptionGroup",
             "type": {
               "kind": "OBJECT",
@@ -27817,6 +28082,33 @@ const introspection = {
                 "type": {
                   "kind": "SCALAR",
                   "name": "String"
+                }
+              }
+            ],
+            "isDeprecated": false
+          },
+          {
+            "name": "productOptions",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "ProductOptionList"
+              }
+            },
+            "args": [
+              {
+                "name": "groupId",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "ID"
+                }
+              },
+              {
+                "name": "options",
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "ProductOptionListOptions"
                 }
               }
             ],
@@ -28197,6 +28489,29 @@ const introspection = {
                 "type": {
                   "kind": "INPUT_OBJECT",
                   "name": "ShippingMethodListOptions"
+                }
+              }
+            ],
+            "isDeprecated": false
+          },
+          {
+            "name": "slugForEntity",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String"
+              }
+            },
+            "args": [
+              {
+                "name": "input",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "SlugForEntityInput"
+                  }
                 }
               }
             ],
@@ -32264,6 +32579,50 @@ const introspection = {
         "interfaces": []
       },
       {
+        "kind": "INPUT_OBJECT",
+        "name": "SlugForEntityInput",
+        "inputFields": [
+          {
+            "name": "entityName",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String"
+              }
+            }
+          },
+          {
+            "name": "fieldName",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String"
+              }
+            }
+          },
+          {
+            "name": "inputValue",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String"
+              }
+            }
+          },
+          {
+            "name": "entityId",
+            "type": {
+              "kind": "SCALAR",
+              "name": "ID"
+            }
+          }
+        ],
+        "isOneOf": false
+      },
+      {
         "kind": "ENUM",
         "name": "SortOrder",
         "enumValues": [
@@ -34610,6 +34969,20 @@ const introspection = {
         "kind": "INPUT_OBJECT",
         "name": "TaxRateFilterParameter",
         "inputFields": [
+          {
+            "name": "zoneId",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "IDOperators"
+            }
+          },
+          {
+            "name": "categoryId",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "IDOperators"
+            }
+          },
           {
             "name": "id",
             "type": {

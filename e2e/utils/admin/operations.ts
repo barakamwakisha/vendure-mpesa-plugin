@@ -48,6 +48,21 @@ export const SetOrderCustomFields = graphql(`
     }
 `)
 
+export const CancelOrder = graphql(`
+    mutation CancelOrder($input: CancelOrderInput!) {
+        cancelOrder(input: $input) {
+            __typename
+            ... on Order {
+                id
+            }
+            ... on ErrorResult {
+                errorCode
+                message
+            }
+        }
+    }
+`)
+
 export const AddManualPaymentToOrder = graphql(`
     mutation AddManualPaymentToOrder($input: ManualPaymentInput!) {
         addManualPaymentToOrder(input: $input) {
@@ -58,6 +73,49 @@ export const AddManualPaymentToOrder = graphql(`
             ... on ErrorResult {
                 errorCode
                 message
+            }
+        }
+    }
+`)
+
+export const RefundOrder = graphql(`
+    mutation RefundOrder($input: RefundOrderInput!) {
+        refundOrder(input: $input) {
+            __typename
+            ... on Refund {
+                id
+                state
+                transactionId
+            }
+            ... on RefundStateTransitionError {
+                errorCode
+                message
+                transitionError
+                fromState
+                toState
+            }
+            ... on ErrorResult {
+                errorCode
+                message
+            }
+        }
+    }
+`)
+
+export const GetOrderWithPaymentsAndRefunds = graphql(`
+    query GetOrderWithPaymentsAndRefunds($id: ID!) {
+        order(id: $id) {
+            id
+            totalWithTax
+            payments {
+                id
+                transactionId
+                metadata
+                refunds {
+                    id
+                    state
+                    transactionId
+                }
             }
         }
     }

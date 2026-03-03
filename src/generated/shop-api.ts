@@ -1407,6 +1407,18 @@ const introspection = {
             "isDeprecated": false
           },
           {
+            "name": "productVariantCount",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int"
+              }
+            },
+            "args": [],
+            "isDeprecated": false
+          },
+          {
             "name": "productVariants",
             "type": {
               "kind": "NON_NULL",
@@ -1584,6 +1596,13 @@ const introspection = {
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "IDOperators"
+            }
+          },
+          {
+            "name": "productVariantCount",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "NumberOperators"
             }
           },
           {
@@ -1792,6 +1811,13 @@ const introspection = {
           },
           {
             "name": "parentId",
+            "type": {
+              "kind": "ENUM",
+              "name": "SortOrder"
+            }
+          },
+          {
+            "name": "productVariantCount",
             "type": {
               "kind": "ENUM",
               "name": "SortOrder"

@@ -23,7 +23,11 @@ import {
     InitiateMpesaTransactionDocument,
     VerifyMpesaTransactionDocument,
 } from "../src/api/shop-operations"
-import { CreatePaymentMethod } from "./utils/admin/operations"
+import {
+    CreatePaymentMethod,
+    GetOrderWithPaymentsAndRefunds,
+    RefundOrder,
+} from "./utils/admin/operations"
 import {
     AddItemToOrder,
     SetCustomerForOrder,
@@ -31,13 +35,11 @@ import {
     SetBillingAddress,
     SetShippingMethod,
     GetActiveOrder,
-    GetProduct,
-    GetEligibleShippingMethods,
     GetProducts,
 } from "./utils/shop/operations"
 import {
+    REVERSAL_CALLBACK_ENDPOINT,
     SANDBOX_BASE_URL,
-    LIVE_BASE_URL,
     STK_PUSH_CALLBACK_ENDPOINT,
 } from "../src/constants"
 import { MpesaConfig } from "../src/types"
@@ -55,30 +57,23 @@ const mockMpesaConfig = {
     initiatorName: "test_initiator",
     initiatorPassword: "test_initiator_password",
     apiCertificate: `-----BEGIN CERTIFICATE-----
-MIICdTCCAd4CAQAwDQYJKoZIhvcNAQEFBQAwgZ4xCzAJBgNVBAYTAktFMQswCQYD
-VQQIEwJORTEVMBMGA1UEBxMMTkFJUk9CSSwgS0VOWTEVMBMGA1UEChMMU0FGQVJJ
-Q09NIFBMQzEaMBgGA1UECxMRU0FGUklDT00gQ0VSVElGSUNBVEUxGTAXBgNVBAMT
-EFNBUklDT00gQ0VSVElGSUNBVEUxETAPBgNVBCkTCFNBUklDT00wHhcNMTcwNzE5
-MTQwODAwWhcNMTkwNzE5MTQwODAwWjCBnjELMAkGA1UEBhMCS0UxCzAJBgNVBAgT
-Ak5FMRUwEwYDVQQHEwxOQUlST0JJLCBLRU5ZMRUwEwYDVQQKEwxTQUZBUklDT00g
-UExDMRowGAYDVQQLExFTRUZBUklDT00gQ0VSVElGSUNBVEUxGTAXBgNVBAMTEFNB
-UklDT00gQ0VSVElGSUNBVEUxETAPBgNVBCkTCFNBUklDT00wgZ8wDQYJKoZIhvcN
-AQEBBQADgY0AMIGJAoGBANu3UocQZ4e0qK9W2l4QrN4o8L5x3w8Q7J9X5X3X2X2X
-2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X
-2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X
-2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X
-2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X
-2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X
-2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X
-2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X
-2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X
-2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X
-2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X
-2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X
-2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X
-2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X
-2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X
-2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X2X
+MIIDCzCCAfOgAwIBAgIUKPxBilHEHcuRBENj8GqZA/5rGPYwDQYJKoZIhvcNAQEL
+BQAwFTETMBEGA1UEAwwKbXBlc2EtdGVzdDAeFw0yNjAzMDIyMjQzNTRaFw0zNjAy
+MjgyMjQzNTRaMBUxEzARBgNVBAMMCm1wZXNhLXRlc3QwggEiMA0GCSqGSIb3DQEB
+AQUAA4IBDwAwggEKAoIBAQDgELxL3hxxMT0zxL18Uqx+L9GCSEvAtLtFHLN0ptxl
+QImAfiWDL3HL/2KeDdrYivdpcEE7pq0LsiiNDIRT64cIPqqbjLiFmE3MOnvuCT4F
+IMfES1sCjaHhISRHkAqU/dN1jBIvol6I1IL/G/BzydtPxdw9wC3vD2irgPxTCmsk
+zjvQvxGIgc3O550j++FMz5HyWFXjSxYiA2fMkogkk87olGzR7qWAhGC/ZR6EMwI2
+vmealnvr+AzF62Snu6Q5FUm/BHVk8yndeykbGTXLjDmPnO08+1k83npqso45rJ4q
+w1bq9JqGABsW4l7zirxxUJ2zS+EW3FW0ZfUkEm/B83NJAgMBAAGjUzBRMB0GA1Ud
+DgQWBBTNaikZ20c8cUWt83f7ZPqnB3HIpzAfBgNVHSMEGDAWgBTNaikZ20c8cUWt
+83f7ZPqnB3HIpzAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQAd
+naAqnNKhIdZLdauYCD3pFRPypUS6x4eV87iPe4cJal5eD1UwqW+BpFKJSCDkM1EX
+QPGQNh7MseHIRUq4XgVAMelhjj20tNKrIWiSPcePxjJmaLp7hITzOwUJrjCS3qI5
+FkqPYpWxor12p5g6R4rIipzFbTpC89mMnMpVwQNgL0FaKv4uLBi1unHen3H8yh4O
+XYd5fL/16mFMBSp8rWGouPpT1jtXyotacdlqAdpCHjgbTXYC6c6fRZBeqtbibRPL
+gk3Ln3jDF4MkhQ9dwL+ZFYuwlG3KYUAeCvpZwrWufpLyEwG0Vtt6DFPeDj3quhCR
+TKqA/+tq2Yk5jqvNtAP7
 -----END CERTIFICATE-----`,
     vendureHost: "http://localhost:4000",
 } satisfies MpesaConfig
@@ -93,10 +88,8 @@ describe("Mpesa Plugin", function () {
     })
 
     let activeChannelId: string
-    let mpesaPaymentMethodId: string
     let testProductVariantId: string
     let testShippingMethodId: string
-    let testCustomerId: string
 
     beforeAll(async () => {
         registerInitializer("sqljs", new SqljsInitializer(TEST_DB_DIR))
@@ -168,34 +161,28 @@ describe("Mpesa Plugin", function () {
             },
         )
 
-        const createMpesaPaymentMethod = await adminClient.query(
-            CreatePaymentMethod,
-            {
-                input: {
-                    code: "mpesa",
-                    enabled: true,
-                    translations: [
-                        {
-                            languageCode: LanguageCode.en,
-                            name: "M-Pesa",
-                            description: "M-Pesa payment method",
-                        },
-                    ],
-                    handler: {
-                        code: "mpesa",
-                        arguments: Object.entries(mockMpesaConfig).map(
-                            ([name, value]) => ({
-                                name,
-                                value: String(value),
-                            }),
-                        ),
+        await adminClient.query(CreatePaymentMethod, {
+            input: {
+                code: "mpesa",
+                enabled: true,
+                translations: [
+                    {
+                        languageCode: LanguageCode.en,
+                        name: "M-Pesa",
+                        description: "M-Pesa payment method",
                     },
+                ],
+                handler: {
+                    code: "mpesa",
+                    arguments: Object.entries(mockMpesaConfig).map(
+                        ([name, value]) => ({
+                            name,
+                            value: String(value),
+                        }),
+                    ),
                 },
             },
-        )
-        mpesaPaymentMethodId = String(
-            createMpesaPaymentMethod.createPaymentMethod.id,
-        )
+        })
 
         const { products } = await shopClient.query(GetProducts, {
             options: {
@@ -212,21 +199,14 @@ describe("Mpesa Plugin", function () {
         )
         testShippingMethodId = shippingMethodId.toString()
 
-        const { setCustomerForOrder } = await shopClient.query(
-            SetCustomerForOrder,
-            {
-                input: {
-                    firstName: "John",
-                    lastName: "Doe",
-                    emailAddress: "john.doe@test.com",
-                    phoneNumber: "+254700000000",
-                },
+        await shopClient.query(SetCustomerForOrder, {
+            input: {
+                firstName: "John",
+                lastName: "Doe",
+                emailAddress: "john.doe@test.com",
+                phoneNumber: "+254700000000",
             },
-        )
-        testCustomerId =
-            setCustomerForOrder && "customer" in setCustomerForOrder
-                ? String(setCustomerForOrder.customer?.id || "")
-                : ""
+        })
     }
 
     describe("STK Push Initiation", () => {
@@ -404,7 +384,7 @@ describe("Mpesa Plugin", function () {
                     },
                 },
             }
-            const response = await shopClient.fetch(
+            await shopClient.fetch(
                 `${mockMpesaConfig.vendureHost}/${STK_PUSH_CALLBACK_ENDPOINT}`,
                 {
                     method: "POST",
@@ -441,7 +421,7 @@ describe("Mpesa Plugin", function () {
                 },
             }
 
-            const response = await shopClient.fetch(
+            await shopClient.fetch(
                 `${mockMpesaConfig.vendureHost}/${STK_PUSH_CALLBACK_ENDPOINT}`,
                 {
                     method: "POST",
@@ -464,11 +444,237 @@ describe("Mpesa Plugin", function () {
         })
     })
 
-    // TODO: Test payment reversal
+    describe("Payment reversal", () => {
+        const RECEIPT_ID = "RCP_REVERSAL_TEST"
+
+        function reversalCallbackPayload(opts: {
+            transactionId: string
+            resultCode: string
+            resultDesc: string
+        }) {
+            return {
+                Result: {
+                    ResultType: 0 as const,
+                    ResultCode: opts.resultCode,
+                    ResultDesc: opts.resultDesc,
+                    OriginatorConversationID: "29115-34620561-1",
+                    ConversationID: "AG_20210727_00005797af5d7d75f652",
+                    TransactionID: opts.transactionId,
+                    ResultParameters: { ResultParameter: [] },
+                    ReferenceData: { ReferenceItem: [] },
+                },
+            }
+        }
+
+        it("calls reversal API and creates refund in Validating state", async () => {
+            await setupCompleteOrder()
+            const { activeOrder } = await shopClient.query(GetActiveOrder)
+            const orderId = String(activeOrder!.id)
+            await addTestPayment(RECEIPT_ID)
+            mockMpesaAuth()
+            const reversalScope = mockSuccessfulReversal()
+            const { order } = await adminClient.query(
+                GetOrderWithPaymentsAndRefunds,
+                {
+                    id: orderId,
+                },
+            )
+
+            const paymentId = order?.payments?.[0]?.id
+            const totalWithTax = order?.totalWithTax
+            expect(paymentId).toBeDefined()
+
+            const result = await adminClient.query(RefundOrder, {
+                input: {
+                    paymentId,
+                    amount: totalWithTax,
+                    shipping: 0,
+                    adjustment: 0,
+                    reason: "Test refund",
+                },
+            })
+
+            expect(result.refundOrder?.__typename).toBe("Refund")
+            if (result.refundOrder?.__typename === "Refund") {
+                expect(result.refundOrder.state).toBe("Validating")
+                expect(result.refundOrder.transactionId).toBe(RECEIPT_ID)
+            }
+            expect(reversalScope.isDone()).toBe(true)
+        })
+
+        it("callback with ResultCode 0 marks refund Settled", async () => {
+            await setupCompleteOrder()
+            const { activeOrder } = await shopClient.query(GetActiveOrder)
+            const orderId = String(activeOrder!.id)
+            await addTestPayment(RECEIPT_ID)
+            mockMpesaAuth()
+            mockSuccessfulReversal()
+            await createTestRefund(orderId)
+
+            const payload = reversalCallbackPayload({
+                transactionId: RECEIPT_ID,
+                resultCode: "0",
+                resultDesc: "Success",
+            })
+            const response = await shopClient.fetch(
+                `${mockMpesaConfig.vendureHost}/${REVERSAL_CALLBACK_ENDPOINT}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                },
+            )
+            expect(response.ok).toBe(true)
+
+            const { order } = await adminClient.query(
+                GetOrderWithPaymentsAndRefunds,
+                {
+                    id: orderId,
+                },
+            )
+            const refunds = (order?.payments ?? []).flatMap(
+                p =>
+                    (
+                        p as {
+                            refunds?: { transactionId: string; state: string }[]
+                        }
+                    ).refunds ?? [],
+            )
+
+            console.log(JSON.stringify(refunds, null, 2))
+            const refund = refunds.find(r => r.transactionId === RECEIPT_ID)
+            expect(refund?.state).toBe("Settled")
+        })
+
+        it("callback with non-zero ResultCode marks refund as Failed", async () => {
+            await setupCompleteOrder()
+            const { activeOrder } = await shopClient.query(GetActiveOrder)
+            const orderId = String(activeOrder!.id)
+            await addTestPayment(RECEIPT_ID)
+            mockMpesaAuth()
+            mockSuccessfulReversal()
+            await createTestRefund(orderId)
+
+            const payload = reversalCallbackPayload({
+                transactionId: RECEIPT_ID,
+                resultCode: "1",
+                resultDesc: "Reversal failed",
+            })
+            const response = await shopClient.fetch(
+                `${mockMpesaConfig.vendureHost}/${REVERSAL_CALLBACK_ENDPOINT}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                },
+            )
+            expect(response.ok).toBe(true)
+
+            const { order } = await adminClient.query(
+                GetOrderWithPaymentsAndRefunds,
+                {
+                    id: orderId,
+                },
+            )
+            const refunds = (order?.payments ?? []).flatMap(
+                p =>
+                    (
+                        p as {
+                            refunds?: { transactionId: string; state: string }[]
+                        }
+                    ).refunds ?? [],
+            )
+            const refund = refunds.find(r => r.transactionId === RECEIPT_ID)
+            expect(refund?.state).toBe("Failed")
+        })
+
+        it("reversal API failure marks refund as Failed", async () => {
+            await setupCompleteOrder()
+            const { activeOrder } = await shopClient.query(GetActiveOrder)
+            const orderId = String(activeOrder!.id)
+            await addTestPayment(RECEIPT_ID)
+            mockMpesaAuth()
+            nock(SANDBOX_BASE_URL)
+                .post("/mpesa/reversal/v1/request")
+                .reply(200, {
+                    OriginatorConversationID: "29115-34620561-1",
+                    ConversationID: "AG_20210727_00005797af5d7d75f652",
+                    ResponseCode: "1",
+                    ResponseDescription: "Rejection",
+                })
+            const { order } = await adminClient.query(
+                GetOrderWithPaymentsAndRefunds,
+                {
+                    id: orderId,
+                },
+            )
+            const paymentId = order?.payments?.[0]?.id
+            const totalWithTax = order?.totalWithTax ?? 100
+            expect(paymentId).toBeDefined()
+
+            const result = await adminClient.query(RefundOrder, {
+                input: {
+                    paymentId,
+                    amount: totalWithTax,
+                    shipping: 0,
+                    adjustment: 0,
+                    reason: "Test refund",
+                },
+            })
+
+            expect(result.refundOrder?.__typename).toBe("Refund")
+            if (result.refundOrder?.__typename === "Refund") {
+                expect(result.refundOrder.state).toBe("Failed")
+            }
+        })
+
+        it("callback for unknown TransactionID does not throw", async () => {
+            await setupCompleteOrder()
+            const { activeOrder } = await shopClient.query(GetActiveOrder)
+            const orderId = String(activeOrder!.id)
+            await addTestPayment(RECEIPT_ID)
+            mockMpesaAuth()
+            mockSuccessfulReversal()
+            await createTestRefund(orderId)
+
+            const payload = reversalCallbackPayload({
+                transactionId: "UNKNOWN_RCP_999",
+                resultCode: "0",
+                resultDesc: "Success",
+            })
+            const response = await shopClient.fetch(
+                `${mockMpesaConfig.vendureHost}/${REVERSAL_CALLBACK_ENDPOINT}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                },
+            )
+            expect(response.ok).toBe(true)
+
+            const { order } = await adminClient.query(
+                GetOrderWithPaymentsAndRefunds,
+                {
+                    id: orderId,
+                },
+            )
+            const refunds = (order?.payments ?? []).flatMap(
+                p =>
+                    (
+                        p as {
+                            refunds?: { transactionId: string; state: string }[]
+                        }
+                    ).refunds ?? [],
+            )
+            const existingRefund = refunds.find(
+                r => r.transactionId === RECEIPT_ID,
+            )
+            expect(existingRefund?.state).toBe("Validating")
+        })
+    })
 
     describe("Error Scenarios", () => {
         it("should handle invalid M-Pesa configuration", async () => {
-            // Create payment method with invalid config
             await adminClient.query(CreatePaymentMethod, {
                 input: {
                     code: "invalid-mpesa",
@@ -585,27 +791,28 @@ describe("Mpesa Plugin", function () {
         })
     }
 
-    async function createTestRefund() {
-        const { activeOrder } = await shopClient.query(GetActiveOrder)
-        if (
-            activeOrder &&
-            "id" in activeOrder &&
-            "payments" in activeOrder &&
-            Array.isArray(activeOrder.payments) &&
-            activeOrder.payments.length > 0
-        ) {
-            // return await adminClient.query(CreateRefund, {
-            //     input: {
-            //         orderId: activeOrder.id,
-            //         lines: [],
-            //         shipping: 0,
-            //         adjustment: 0,
-            //         reason: "Test refund",
-            //         paymentId: activeOrder.payments[0].id,
-            //     },
-            // })
-        }
-        return null
+    async function createTestRefund(orderId: string) {
+        const { order } = await adminClient.query(
+            GetOrderWithPaymentsAndRefunds,
+            {
+                id: orderId,
+            },
+        )
+        const paymentId = order?.payments?.[0]?.id
+        const totalWithTax = order?.totalWithTax ?? 100
+        if (!paymentId) return null
+        const result = await adminClient.query(RefundOrder, {
+            input: {
+                paymentId,
+                amount: totalWithTax,
+                shipping: 0,
+                adjustment: 0,
+                reason: "Test refund",
+            },
+        })
+        return result.refundOrder?.__typename === "Refund"
+            ? result.refundOrder
+            : null
     }
 
     function mockMpesaAuth() {
@@ -666,11 +873,13 @@ describe("Mpesa Plugin", function () {
     }
 
     function mockSuccessfulReversal() {
-        nock(SANDBOX_BASE_URL).post("/mpesa/reversal/v1/request").reply(200, {
-            OriginatorConversationID: "29115-34620561-1",
-            ConversationID: "AG_20210727_00005797af5d7d75f652",
-            ResponseCode: "0",
-            ResponseDescription: "Accept the service request successfully.",
-        })
+        return nock(SANDBOX_BASE_URL)
+            .post("/mpesa/reversal/v1/request")
+            .reply(200, {
+                OriginatorConversationID: "29115-34620561-1",
+                ConversationID: "AG_20210727_00005797af5d7d75f652",
+                ResponseCode: "0",
+                ResponseDescription: "Accept the service request successfully.",
+            })
     }
 })
