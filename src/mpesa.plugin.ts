@@ -6,6 +6,15 @@ import { ReversalCallbackController } from "./api/reversal-callback.controller"
 import { StkPushCallbackController } from "./api/stk-push-callback.controller"
 import { configuration } from "./config/runtime-config"
 import { MpesaService } from "./service/mpesa.service"
+import {
+    MPESA_STK_PUSH_CALLBACK_IP_ALLOWLIST,
+    STK_PUSH_CALLBACK_ALLOWLIST,
+} from "./constants"
+
+export interface MpesaPluginOptions {
+    /** Extra IPs to allow for STK push callback (e.g. 127.0.0.1, ::1 for local/testing). */
+    stkPushCallbackAdditionalIps?: string[]
+}
 
 /**
  * @description
@@ -21,7 +30,7 @@ import { MpesaService } from "./service/mpesa.service"
  * export const config: VendureConfig = {
  *   plugins: [
  *     MpesaPlugin,
- *     // ... other plugins
+ *     // or with options: MpesaPlugin.init({ stkPushCallbackAdditionalIps: ['127.0.0.1', '::1'] }),
  *   ],
  * };
  * ```
@@ -38,7 +47,23 @@ import { MpesaService } from "./service/mpesa.service"
         schema: shopApiExtensions,
         resolvers: [MpesaShopResolver],
     },
-    providers: [MpesaService],
+    providers: [
+        MpesaService,
+        {
+            provide: STK_PUSH_CALLBACK_ALLOWLIST,
+            useFactory: (): readonly string[] => [
+                ...MPESA_STK_PUSH_CALLBACK_IP_ALLOWLIST,
+                ...(MpesaPlugin.options?.stkPushCallbackAdditionalIps ?? []),
+            ],
+        },
+    ],
     configuration,
 })
-export class MpesaPlugin {}
+export class MpesaPlugin {
+    static options: MpesaPluginOptions | undefined
+
+    static init(options: MpesaPluginOptions): typeof MpesaPlugin {
+        MpesaPlugin.options = options
+        return MpesaPlugin
+    }
+}

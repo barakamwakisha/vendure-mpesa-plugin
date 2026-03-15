@@ -244,21 +244,27 @@ export class MpesaService {
         ctx: RequestContext,
         payload: STKCallbackPayload,
     ) {
-        const { CheckoutRequestID, CallbackMetadata } = payload.Body.stkCallback
+        const { CheckoutRequestID, CallbackMetadata, ResultCode } =
+            payload.Body.stkCallback
 
-        const config = await this.getMpesaConfig(ctx)
-
-        const { isSuccessful, message } = await this.checkTransactionStatus(
-            config,
+        const existingPayment = await this.getPaymentByTransactionId(
+            ctx,
             CheckoutRequestID,
         )
-        if (!isSuccessful) {
-            Logger.warn(
-                `Transaction ${CheckoutRequestID} failed. ${message}`,
+        if (existingPayment) {
+            Logger.info(
+                `STK callback already processed for ${CheckoutRequestID}, skipping`,
                 loggerCtx,
             )
+            return
+        }
 
-            // Flag the transaction as failed by setting the internal checkoutRequestID custom field on the order to null
+        const isSuccess = ResultCode === 0
+        if (!isSuccess) {
+            Logger.warn(
+                `Transaction ${CheckoutRequestID} failed. ${payload.Body.stkCallback.ResultDesc}`,
+                loggerCtx,
+            )
             const order = await this.connection
                 .getRepository(ctx, Order)
                 .findOne({
@@ -269,7 +275,6 @@ export class MpesaService {
                     },
                 })
             if (!order) return
-
             await this.orderService.updateCustomFields(ctx, order.id, {
                 mpesaCheckoutRequestID: null,
             })
@@ -332,6 +337,18 @@ export class MpesaService {
                 loggerCtx,
             )
         })
+
+        const config = await this.getMpesaConfig(ctx)
+        const queryResult = await this.checkTransactionStatus(
+            config,
+            CheckoutRequestID,
+        )
+        if (!queryResult.isSuccessful) {
+            Logger.warn(
+                `STK query failed for transaction ${CheckoutRequestID}: ${queryResult.message}`,
+                loggerCtx,
+            )
+        }
     }
 
     async reversePayment(
@@ -457,7 +474,7 @@ export class MpesaService {
             })
 
         if (!payment) {
-            Logger.warn(
+            Logger.info(
                 `There isn't a payment related with the transaction ID ${transactionId}`,
                 loggerCtx,
             )

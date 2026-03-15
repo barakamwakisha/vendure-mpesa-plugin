@@ -81,7 +81,11 @@ TKqA/+tq2Yk5jqvNtAP7
 describe("Mpesa Plugin", function () {
     const { server, adminClient, shopClient } = createTestEnvironment({
         ...testConfig(4000),
-        plugins: [MpesaPlugin],
+        plugins: [
+            MpesaPlugin.init({
+                stkPushCallbackAdditionalIps: ["127.0.0.1", "::1"],
+            }),
+        ],
         paymentOptions: {
             paymentMethodHandlers: [testPaymentMethod],
         },
