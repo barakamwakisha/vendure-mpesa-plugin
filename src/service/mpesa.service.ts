@@ -281,9 +281,9 @@ export class MpesaService {
             return
         }
 
-        this.connection.withTransaction(ctx, async () => {
+        await this.connection.withTransaction(ctx, async txCtx => {
             const order = await this.connection
-                .getRepository(ctx, Order)
+                .getRepository(txCtx, Order)
                 .findOne({
                     where: {
                         customFields: {
@@ -296,7 +296,7 @@ export class MpesaService {
             if (order.state !== "ArrangingPayment") {
                 const transitionResult =
                     await this.orderService.transitionToState(
-                        ctx,
+                        txCtx,
                         order.id,
                         "ArrangingPayment",
                     )
@@ -316,7 +316,7 @@ export class MpesaService {
                 )?.Value ?? "N/A"
 
             const addPaymentToOrderResult =
-                await this.orderService.addPaymentToOrder(ctx, order.id, {
+                await this.orderService.addPaymentToOrder(txCtx, order.id, {
                     method: mpesaPaymentMethodHandler.code,
                     metadata: {
                         CheckoutRequestID,
