@@ -1,5 +1,11 @@
 # vendure-mpesa-plugin
 
+## 0.0.27
+
+### Patch Changes
+
+- 0cac0cf: Fix STK Push callback transaction bug
+
 ## 0.0.13
 
 ### Patch Changes
