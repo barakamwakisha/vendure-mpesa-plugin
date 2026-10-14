@@ -1,3 +1,5 @@
+> **Archived.** This package is no longer maintained. Use [@monkish/vendure-mpesa-plugin](https://github.com/MonkishTech/monkish-vendure-plugins/tree/main/packages/mpesa).
+
 ![Vendure Mpesa Plugin](https://raw.githubusercontent.com/barakamwakisha/vendure-mpesa-plugin/main/assets/logo.png)
 
 # Vendure Mpesa Plugin
